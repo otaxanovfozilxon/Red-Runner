@@ -288,7 +288,7 @@ namespace RedRunner.Characters
 			}
 
 			// Speed
-			m_Speed = new Vector2 ( Mathf.Abs ( m_Rigidbody2D.velocity.x ), Mathf.Abs ( m_Rigidbody2D.velocity.y ) );
+			m_Speed = new Vector2 ( Mathf.Abs ( m_Rigidbody2D.linearVelocity.x ), Mathf.Abs ( m_Rigidbody2D.linearVelocity.y ) );
 
 			// Speed Calculations
 			m_CurrentRunSpeed = m_RunSpeed;
@@ -345,8 +345,8 @@ namespace RedRunner.Characters
 		void LateUpdate ()
 		{
 			m_Animator.SetFloat ( "Speed", m_Speed.x );
-			m_Animator.SetFloat ( "VelocityX", Mathf.Abs ( m_Rigidbody2D.velocity.x ) );
-			m_Animator.SetFloat ( "VelocityY", m_Rigidbody2D.velocity.y );
+			m_Animator.SetFloat ( "VelocityX", Mathf.Abs ( m_Rigidbody2D.linearVelocity.x ) );
+			m_Animator.SetFloat ( "VelocityY", m_Rigidbody2D.linearVelocity.y );
 			m_Animator.SetBool ( "IsGrounded", m_GroundCheck.IsGrounded );
 			m_Animator.SetBool ( "IsDead", IsDead.Value );
 			m_Animator.SetBool ( "Block", m_Block );
@@ -428,9 +428,9 @@ namespace RedRunner.Characters
 //				{
 //					speed = m_WalkSpeed;
 				//				}
-				Vector2 velocity = m_Rigidbody2D.velocity;
+				Vector2 velocity = m_Rigidbody2D.linearVelocity;
 				velocity.x = speed * horizontalAxis;
-				m_Rigidbody2D.velocity = velocity;
+				m_Rigidbody2D.linearVelocity = velocity;
 				if ( horizontalAxis > 0f )
 				{
 					Vector3 scale = transform.localScale;
@@ -452,9 +452,9 @@ namespace RedRunner.Characters
 			{
 				if ( m_GroundCheck.IsGrounded )
 				{
-					Vector2 velocity = m_Rigidbody2D.velocity;
+					Vector2 velocity = m_Rigidbody2D.linearVelocity;
 					velocity.y = m_JumpStrength;
-					m_Rigidbody2D.velocity = velocity;
+					m_Rigidbody2D.linearVelocity = velocity;
 					m_Animator.ResetTrigger ( "Jump" );
 					m_Animator.SetTrigger ( "Jump" );
 					m_JumpParticleSystem.Play ();
@@ -473,7 +473,7 @@ namespace RedRunner.Characters
 			if ( !IsDead.Value )
 			{
                 IsDead.Value = true;
-				m_Skeleton.SetActive ( true, m_Rigidbody2D.velocity );
+				m_Skeleton.SetActive ( true, m_Rigidbody2D.linearVelocity );
 				if ( blood )
 				{
 					ParticleSystem particle = Instantiate<ParticleSystem> (
@@ -502,8 +502,8 @@ namespace RedRunner.Characters
 			m_Block = false;
 			m_CurrentFootstepSoundIndex = 0;
 			transform.localScale = m_InitialScale;
-			m_Rigidbody2D.velocity = Vector2.zero;
-			m_Skeleton.SetActive ( false, m_Rigidbody2D.velocity );
+			m_Rigidbody2D.linearVelocity = Vector2.zero;
+			m_Skeleton.SetActive ( false, m_Rigidbody2D.linearVelocity );
 		}
 
 		#endregion

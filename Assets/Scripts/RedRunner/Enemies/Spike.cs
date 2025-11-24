@@ -26,7 +26,6 @@ namespace RedRunner.Enemies
 			Character character = collision2D.collider.GetComponent<Character> ();
 			if (character && !character.IsDead.Value) {
 				bool isTop = false;
-				ContactPoint2D mainPoint;
 				for (int i = 0; i < collision2D.contacts.Length; i++) {
 					if (!isTop) {
 						isTop = collision2D.contacts [i].normal.y < -0.7f && collision2D.contacts [i].normal.y >= -1f;

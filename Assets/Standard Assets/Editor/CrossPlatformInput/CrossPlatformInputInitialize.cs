@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.Build;
 
 namespace UnityStandardAssets.CrossPlatformInput.Inspector
 {
@@ -13,9 +14,9 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
         // EDITOR_MOBILE_INPUT : denotes that mobile input should be used in editor, if a mobile build target is selected. (i.e. using Unity Remote app).
         // MOBILE_INPUT : denotes that mobile input should be used right now!
 
-        static CrossPlatformInitialize()
-        {
-            var defines = GetDefinesList(buildTargetGroups[0]);
+		static CrossPlatformInitialize()
+		{
+			var defines = GetDefinesList(buildTargets[0]);
             if (!defines.Contains("CROSS_PLATFORM_INPUT"))
             {
                 SetEnabled("CROSS_PLATFORM_INPUT", true, false);
@@ -32,9 +33,6 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
             {
                 case BuildTarget.Android:
                 case BuildTarget.iOS:
-                case BuildTarget.PSM: 
-                case BuildTarget.Tizen: 
-                case BuildTarget.WSAPlayer: 
                     EditorUtility.DisplayDialog("Mobile Input",
                                                 "You have enabled Mobile Input. You'll need to use the Unity Remote app on a connected device to control your game in the Editor.",
                                                 "OK");
@@ -52,7 +50,7 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
         [MenuItem("Mobile Input/Enable", true)]
         private static bool EnableValidate()
         {
-            var defines = GetDefinesList(mobileBuildTargetGroups[0]);
+            var defines = GetDefinesList(mobileBuildTargets[0]);
             return !defines.Contains("MOBILE_INPUT");
         }
 
@@ -76,35 +74,31 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
         [MenuItem("Mobile Input/Disable", true)]
         private static bool DisableValidate()
         {
-            var defines = GetDefinesList(mobileBuildTargetGroups[0]);
+            var defines = GetDefinesList(mobileBuildTargets[0]);
             return defines.Contains("MOBILE_INPUT");
         }
 
 
-        private static BuildTargetGroup[] buildTargetGroups = new BuildTargetGroup[]
+        private static NamedBuildTarget[] buildTargets = new NamedBuildTarget[]
             {
-                BuildTargetGroup.Standalone,
-                BuildTargetGroup.Android,
-                BuildTargetGroup.iOS
+                NamedBuildTarget.Standalone,
+                NamedBuildTarget.Android,
+                NamedBuildTarget.iOS
             };
 
-        private static BuildTargetGroup[] mobileBuildTargetGroups = new BuildTargetGroup[]
+        private static NamedBuildTarget[] mobileBuildTargets = new NamedBuildTarget[]
             {
-                BuildTargetGroup.Android,
-                BuildTargetGroup.iOS,
-                BuildTargetGroup.PSM, 
-                BuildTargetGroup.SamsungTV,
-                BuildTargetGroup.Tizen,
-                BuildTargetGroup.WSA 
+                NamedBuildTarget.Android,
+                NamedBuildTarget.iOS
             };
 
 
         private static void SetEnabled(string defineName, bool enable, bool mobile)
         {
             //Debug.Log("setting "+defineName+" to "+enable);
-            foreach (var group in mobile ? mobileBuildTargetGroups : buildTargetGroups)
+            foreach (var target in mobile ? mobileBuildTargets : buildTargets)
             {
-                var defines = GetDefinesList(group);
+                var defines = GetDefinesList(target);
                 if (enable)
                 {
                     if (defines.Contains(defineName))
@@ -125,14 +119,20 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
                     }
                 }
                 string definesString = string.Join(";", defines.ToArray());
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(group, definesString);
+                PlayerSettings.SetScriptingDefineSymbols(target, definesString);
             }
         }
 
 
-        private static List<string> GetDefinesList(BuildTargetGroup group)
+        private static List<string> GetDefinesList(NamedBuildTarget target)
         {
-            return new List<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(group).Split(';'));
+            var definesString = PlayerSettings.GetScriptingDefineSymbols(target);
+            if (string.IsNullOrEmpty(definesString))
+            {
+                return new List<string>();
+            }
+
+            return new List<string>(definesString.Split(';'));
         }
     }
 }

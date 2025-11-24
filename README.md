@@ -27,7 +27,7 @@ Follow the below instructions to get started with Red Runner source code:
 
 Make sure you have the below requirements before starting:
 
-- [Unity Game Engine](https://unity3d.com)
+- [Unity Game Engine](https://unity3d.com) version **6000.2.6f2 (Unity 6)**
 - Basic Knowledge about Unity and C#
 
 ## Download

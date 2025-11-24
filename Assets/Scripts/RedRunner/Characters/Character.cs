@@ -16,7 +16,9 @@ namespace RedRunner.Characters
 
 		public delegate void DeadHandler ();
 
+		#pragma warning disable 0067
 		public virtual event DeadHandler OnDead;
+		#pragma warning restore 0067
 
 		public abstract float MaxRunSpeed { get; }
 

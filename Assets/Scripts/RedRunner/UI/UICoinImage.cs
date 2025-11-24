@@ -19,14 +19,26 @@ namespace RedRunner.UI
 			base.Awake ();
 		}
 
-        protected override void Start()
-        {
-            GameManager.Singleton.m_Coin.AddEventAndFire(Coin_OnCoinCollected, this);
-        }
-
-        void Coin_OnCoinCollected (int coinValue)
+		protected override void Start()
 		{
-			GetComponent<Animator> ().SetTrigger ("Collect");
+			var gm = GameManager.Singleton ?? FindFirstObjectByType<GameManager>();
+			if (gm == null)
+			{
+				Debug.LogError("UICoinImage: GameManager not found in scene; coin UI will be disabled.");
+				enabled = false;
+				return;
+			}
+
+			gm.m_Coin.AddEventAndFire(Coin_OnCoinCollected, this);
+		}
+
+		void Coin_OnCoinCollected (int coinValue)
+		{
+			var animator = GetComponent<Animator> ();
+			if (animator != null)
+			{
+				animator.SetTrigger ("Collect");
+			}
 		}
 
 		public virtual void PlayParticleSystem ()

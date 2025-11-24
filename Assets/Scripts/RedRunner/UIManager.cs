@@ -32,12 +32,10 @@ namespace RedRunner
         private List<UIScreen> m_Screens;
         private UIScreen m_ActiveScreen;
         private UIWindow m_ActiveWindow;
-        [SerializeField]
-        private Texture2D m_CursorDefaultTexture;
-        [SerializeField]
-        private Texture2D m_CursorClickTexture;
-        [SerializeField]
-        private float m_CursorHideDelay = 1f;
+		[SerializeField]
+		private Texture2D m_CursorDefaultTexture;
+		[SerializeField]
+		private Texture2D m_CursorClickTexture;
 
         public List<UIScreen> UISCREENS
         {

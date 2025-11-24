@@ -77,7 +77,7 @@ namespace RedRunner
 		{
 			if (m_IsActive != active) {
 				if (!active) {
-					m_Body.velocity = velocity;
+					m_Body.linearVelocity = velocity;
 				}
 				m_IsActive = active;
 				m_Body.simulated = active;
