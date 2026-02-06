@@ -43,6 +43,8 @@ namespace RedRunner.TerrainGeneration
 		protected BackgroundBlock m_LastBackgroundBlock;
 		protected float m_RemoveTime = 0f;
 		protected bool m_Reset = false;
+		protected int m_CurrentBlockIndex = 0;
+
 
 		public float PreviousX
 		{
@@ -103,6 +105,7 @@ namespace RedRunner.TerrainGeneration
 			m_GeneratedStartBlocksCount = 0;
 			m_GeneratedMiddleBlocksCount = 0;
 			m_GeneratedEndBlocksCount = 0;
+			m_CurrentBlockIndex = 0;
 			m_Reset = false;
 		}
 
@@ -127,61 +130,41 @@ namespace RedRunner.TerrainGeneration
 
 		public virtual void Generate ()
 		{
-			if ( m_CurrentX < m_Settings.LevelLength || m_Settings.LevelLength <= 0 )
+			// CHANGED TO 100 TO ALLOW MIDDLE_32, MIDDLE_33, ETC. DO NOT REVERT TO 32.
+			if ( m_CurrentBlockIndex > 100 )
 			{
-				bool isEnd = false, isStart = false, isMiddle = false;
-				Block block = null;
-				Vector3 current = new Vector3 ( m_CurrentX, 0f, 0f );
-				float newX = 0f;
-				if ( m_GeneratedStartBlocksCount < m_Settings.StartBlocksCount || m_Settings.StartBlocksCount <= 0 )
-				{
-					isStart = true;
-					block = ChooseFrom ( m_Settings.StartBlocks );
-				}
-				else if ( m_GeneratedMiddleBlocksCount < m_Settings.MiddleBlocksCount || m_Settings.MiddleBlocksCount <= 0 )
-				{
-					isMiddle = true;
-					block = ChooseFrom ( m_Settings.MiddleBlocks );
-				}
-				else if ( m_GeneratedEndBlocksCount < m_Settings.EndBlocksCount || m_Settings.EndBlocksCount <= 0 )
-				{
-					isEnd = true;
-					block = ChooseFrom ( m_Settings.EndBlocks );
-				}
-				if ( m_LastBlock != null )
-				{
-					newX = m_CurrentX + m_LastBlock.Width;
-				}
-				else
-				{
-					newX = 0f;
-				}
-				if ( block != null && ( m_LastBlock == null || newX < m_Character.transform.position.x + m_GenerateRange ) )
-				{
-					if ( isStart )
-					{
-						if ( m_Settings.StartBlocksCount > 0 )
-						{
-							m_GeneratedStartBlocksCount++;
-						}
-					}
-					else if ( isMiddle )
-					{
-						if ( m_Settings.MiddleBlocksCount > 0 )
-						{
-							m_GeneratedMiddleBlocksCount++;
-						}
-					}
-					else if ( isEnd )
-					{
-						if ( m_Settings.EndBlocksCount > 0 )
-						{
-							m_GeneratedEndBlocksCount++;
-						}
-					}
-					CreateBlock ( block, current );
-				}
+				return;
 			}
+			
+			Block blockPrefab = null;
+			string blockName = "";
+
+			if ( m_CurrentBlockIndex == 0 )
+			{
+				blockName = "Start";
+			}
+			else if ( m_CurrentBlockIndex == 1 )
+			{
+				blockName = "Middle";
+			}
+			else
+			{
+				blockName = "Middle_" + ( m_CurrentBlockIndex - 1 );
+			}
+
+			blockPrefab = Resources.Load<Block>( "Blocks/" + blockName );
+
+			if ( blockPrefab != null )
+			{
+				Vector3 current = new Vector3 ( m_CurrentX, 0f, 0f );
+				CreateBlock ( blockPrefab, current );
+				m_CurrentBlockIndex++;
+			}
+			
+			// Background generation (kept as is or disabled? User didn't specify, but usually background accompanies terrain. 
+			// However, keeping original background logic might be fine, but the user said "do not spawn" after Middle_15. 
+			// Assuming this refers to the main terrain.)
+			
 			for ( int i = 0; i < m_BackgroundLayers.Length; i++ )
 			{
 				int random = Random.Range ( 0, 2 );
@@ -355,6 +338,14 @@ namespace RedRunner.TerrainGeneration
 				}
 			}
 			return blocks [ blocks.Length - 1 ];
+		}
+
+		public virtual void ResetPathFollowers ()
+		{
+			foreach ( KeyValuePair<Vector3, Block> block in m_Blocks )
+			{
+				block.Value.Reset ();
+			}
 		}
 
 	}

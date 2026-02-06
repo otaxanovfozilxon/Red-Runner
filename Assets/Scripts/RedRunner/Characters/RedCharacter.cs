@@ -81,6 +81,8 @@ namespace RedRunner.Characters
 
 		#region Properties
 
+		public bool IsInputBlocked { get; set; }
+
 		public override float MaxRunSpeed
 		{
 			get
@@ -298,6 +300,12 @@ namespace RedRunner.Characters
 			}
 
 			// Input Processing
+			if (IsInputBlocked)
+			{
+				m_Rigidbody2D.linearVelocity = new Vector2(0f, m_Rigidbody2D.linearVelocity.y);
+				m_Animator.SetFloat("Speed", 0f);
+				return;
+			}
 			Move ( CrossPlatformInputManager.GetAxis ( "Horizontal" ) );
 			if ( CrossPlatformInputManager.GetButtonDown ( "Jump" ) )
 			{

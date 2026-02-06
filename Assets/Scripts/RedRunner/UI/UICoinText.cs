@@ -17,17 +17,31 @@ namespace RedRunner.UI
 			base.Awake ();
 		}
 
+		protected bool m_Initialized = false;
+
 		protected override void Start()
+		{
+			InitConnection ();
+		}
+
+		protected virtual void Update ()
+		{
+			if (!m_Initialized)
+			{
+				InitConnection ();
+			}
+		}
+
+		private void InitConnection ()
 		{
 			var gm = GameManager.Singleton ?? FindFirstObjectByType<GameManager>();
 			if (gm == null)
 			{
-				Debug.LogError("UICoinText: GameManager not found in scene; coin UI will be disabled.");
-				enabled = false;
 				return;
 			}
 
 			gm.m_Coin.AddEventAndFire(UpdateCoinsText, this);
+			m_Initialized = true;
 		}
 
 		private void UpdateCoinsText(int newCoinValue)

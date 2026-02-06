@@ -128,7 +128,14 @@ namespace RedRunner.Utilities
 			while (Application.isPlaying) {
 				m_LastPosition = transform.position;
 				yield return new WaitForEndOfFrame ();
-				m_Velocity = (m_LastPosition - transform.position) / Time.deltaTime;
+				if (Time.deltaTime > 0f)
+				{
+					m_Velocity = (m_LastPosition - transform.position) / Time.deltaTime;
+				}
+				else
+				{
+					m_Velocity = Vector3.zero;
+				}
 			}
 		}
 
@@ -145,6 +152,24 @@ namespace RedRunner.Utilities
 			m_OverTimeSpeed = 0f;
 			m_CurrentPoint.MoveNext ();
 			m_IsMovingNext = false;
+		}
+
+		public virtual void Reset ()
+		{
+			StopAllCoroutines ();
+			m_Stopped = false;
+			m_IsMovingNext = false;
+			m_OverTimeSpeed = 0f;
+			if ( m_PathDefinition != null )
+			{
+				m_CurrentPoint = m_PathDefinition.GetPathEnumerator ();
+				m_CurrentPoint.MoveNext ();
+				if ( m_CurrentPoint.Current != null )
+				{
+					transform.position = m_CurrentPoint.Current.transform.position;
+				}
+			}
+			StartCoroutine ( CalcVelocity () );
 		}
 
 	}

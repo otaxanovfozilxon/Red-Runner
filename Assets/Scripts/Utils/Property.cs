@@ -94,7 +94,8 @@ public class Property<T>
         var oldValue = currentValue;
         currentValue = value;
 
-        Callbacks.RemoveAll(el =>
+        var callbacksCopy = new List<Act<T>>(Callbacks);
+        callbacksCopy.RemoveAll(el =>
         {
             try
             {
@@ -118,5 +119,6 @@ public class Property<T>
                 return false;
             }
         });
+        Callbacks.RemoveAll(el => el.HasMb && el.Mb == null); // Cleanup dead MonoBehaviours from original list
     }
 }

@@ -33,6 +33,7 @@ namespace RedRunner.TerrainGeneration
 			
 		}
 
+
 		public virtual void PreGenerate (TerrainGenerator generator)
 		{
 			
@@ -41,6 +42,14 @@ namespace RedRunner.TerrainGeneration
 		public virtual void PostGenerate (TerrainGenerator generator)
 		{
 			
+		}
+
+		public virtual void Reset ()
+		{
+			RedRunner.Utilities.PathFollower[] pathFollowers = GetComponentsInChildren<RedRunner.Utilities.PathFollower> ();
+			for (int i = 0; i < pathFollowers.Length; i++) {
+				pathFollowers [i].Reset ();
+			}
 		}
 
 	}
