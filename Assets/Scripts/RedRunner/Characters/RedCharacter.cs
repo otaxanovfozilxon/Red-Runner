@@ -81,6 +81,8 @@ namespace RedRunner.Characters
 
 		#region Properties
 
+		public bool IsInputBlocked { get; set; }
+
 		public override float MaxRunSpeed
 		{
 			get
@@ -273,6 +275,25 @@ namespace RedRunner.Characters
 			m_Block = false;
 			m_CurrentFootstepSoundIndex = 0;
 			GameManager.OnReset += GameManager_OnReset;
+			PreWarmParticles ();
+		}
+
+		void PreWarmParticles ()
+		{
+			// Pre-instantiate and destroy particles to warm up WebGL asset decompression
+			// This prevents the freeze on first death
+			if ( m_BloodParticleSystem != null )
+			{
+				var p = Instantiate ( m_BloodParticleSystem, Vector3.one * -1000f, Quaternion.identity );
+				p.Stop ();
+				Destroy ( p.gameObject );
+			}
+			if ( m_WaterParticleSystem != null )
+			{
+				var p = Instantiate ( m_WaterParticleSystem, Vector3.one * -1000f, Quaternion.identity );
+				p.Stop ();
+				Destroy ( p.gameObject );
+			}
 		}
 
 		void Update ()
@@ -298,6 +319,12 @@ namespace RedRunner.Characters
 			}
 
 			// Input Processing
+			if (IsInputBlocked)
+			{
+				m_Rigidbody2D.linearVelocity = new Vector2(0f, m_Rigidbody2D.linearVelocity.y);
+				m_Animator.SetFloat("Speed", 0f);
+				return;
+			}
 			Move ( CrossPlatformInputManager.GetAxis ( "Horizontal" ) );
 			if ( CrossPlatformInputManager.GetButtonDown ( "Jump" ) )
 			{

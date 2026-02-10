@@ -43,6 +43,9 @@ namespace RedRunner.TerrainGeneration
 		protected BackgroundBlock m_LastBackgroundBlock;
 		protected float m_RemoveTime = 0f;
 		protected bool m_Reset = false;
+		protected int m_CurrentBlockIndex = 0;
+		protected Dictionary<string, Block> m_BlockPrefabCache = new Dictionary<string, Block>();
+
 
 		public float PreviousX
 		{
@@ -78,12 +81,35 @@ namespace RedRunner.TerrainGeneration
 			m_Singleton = this;
 			m_Blocks = new Dictionary<Vector3, Block> ();
 			m_BackgroundBlocks = new Dictionary<Vector3, BackgroundBlock> ();
-			m_BackgroundLayers = new BackgroundLayer[m_Settings.BackgroundLayers.Length];
-			for ( int i = 0; i < m_Settings.BackgroundLayers.Length; i++ )
+			
+			// NULL CHECK: Prevent crash if settings or background layers are missing
+			if ( m_Settings != null && m_Settings.BackgroundLayers != null )
 			{
-				m_BackgroundLayers [ i ] = m_Settings.BackgroundLayers [ i ];
+				m_BackgroundLayers = new BackgroundLayer[m_Settings.BackgroundLayers.Length];
+				for ( int i = 0; i < m_Settings.BackgroundLayers.Length; i++ )
+				{
+					m_BackgroundLayers [ i ] = m_Settings.BackgroundLayers [ i ];
+				}
 			}
+			else
+			{
+				// Initialize empty array if settings missing (prevents null reference)
+				m_BackgroundLayers = new BackgroundLayer[0];
+				Debug.LogWarning("[TerrainGenerator] TerrainGenerationSettings or BackgroundLayers is null - no background will be generated");
+			}
+			
 			GameManager.OnReset += Reset;
+		}
+
+		protected Block GetBlockPrefab ( string blockName )
+		{
+			// Lazy-load and cache: only load each block once, on first use
+			if ( m_BlockPrefabCache.TryGetValue ( blockName, out Block cached ) )
+				return cached;
+			var block = Resources.Load<Block> ( "Blocks/" + blockName );
+			if ( block != null )
+				m_BlockPrefabCache [ blockName ] = block;
+			return block;
 		}
 
 		protected virtual void Reset ()
@@ -93,9 +119,12 @@ namespace RedRunner.TerrainGeneration
 			m_CurrentX = 0f;
 			m_LastBlock = null;
 			m_LastBackgroundBlock = null;
-			for ( int i = 0; i < m_BackgroundLayers.Length; i++ )
+			if (m_BackgroundLayers != null)
 			{
-				m_BackgroundLayers [ i ].Reset ();
+				for ( int i = 0; i < m_BackgroundLayers.Length; i++ )
+				{
+					m_BackgroundLayers [ i ].Reset ();
+				}
 			}
 			m_FathestBackgroundX = 0f;
 			m_Blocks.Clear ();
@@ -103,6 +132,7 @@ namespace RedRunner.TerrainGeneration
 			m_GeneratedStartBlocksCount = 0;
 			m_GeneratedMiddleBlocksCount = 0;
 			m_GeneratedEndBlocksCount = 0;
+			m_CurrentBlockIndex = 0;
 			m_Reset = false;
 		}
 
@@ -127,61 +157,40 @@ namespace RedRunner.TerrainGeneration
 
 		public virtual void Generate ()
 		{
-			if ( m_CurrentX < m_Settings.LevelLength || m_Settings.LevelLength <= 0 )
+			// CHANGED TO 100 TO ALLOW MIDDLE_32, MIDDLE_33, ETC. DO NOT REVERT TO 32.
+			if ( m_CurrentBlockIndex > 100 )
 			{
-				bool isEnd = false, isStart = false, isMiddle = false;
-				Block block = null;
-				Vector3 current = new Vector3 ( m_CurrentX, 0f, 0f );
-				float newX = 0f;
-				if ( m_GeneratedStartBlocksCount < m_Settings.StartBlocksCount || m_Settings.StartBlocksCount <= 0 )
-				{
-					isStart = true;
-					block = ChooseFrom ( m_Settings.StartBlocks );
-				}
-				else if ( m_GeneratedMiddleBlocksCount < m_Settings.MiddleBlocksCount || m_Settings.MiddleBlocksCount <= 0 )
-				{
-					isMiddle = true;
-					block = ChooseFrom ( m_Settings.MiddleBlocks );
-				}
-				else if ( m_GeneratedEndBlocksCount < m_Settings.EndBlocksCount || m_Settings.EndBlocksCount <= 0 )
-				{
-					isEnd = true;
-					block = ChooseFrom ( m_Settings.EndBlocks );
-				}
-				if ( m_LastBlock != null )
-				{
-					newX = m_CurrentX + m_LastBlock.Width;
-				}
-				else
-				{
-					newX = 0f;
-				}
-				if ( block != null && ( m_LastBlock == null || newX < m_Character.transform.position.x + m_GenerateRange ) )
-				{
-					if ( isStart )
-					{
-						if ( m_Settings.StartBlocksCount > 0 )
-						{
-							m_GeneratedStartBlocksCount++;
-						}
-					}
-					else if ( isMiddle )
-					{
-						if ( m_Settings.MiddleBlocksCount > 0 )
-						{
-							m_GeneratedMiddleBlocksCount++;
-						}
-					}
-					else if ( isEnd )
-					{
-						if ( m_Settings.EndBlocksCount > 0 )
-						{
-							m_GeneratedEndBlocksCount++;
-						}
-					}
-					CreateBlock ( block, current );
-				}
+				return;
 			}
+			
+			Block blockPrefab = null;
+			string blockName = "";
+
+			if ( m_CurrentBlockIndex == 0 )
+			{
+				blockName = "Start";
+			}
+			else if ( m_CurrentBlockIndex == 1 )
+			{
+				blockName = "Middle";
+			}
+			else
+			{
+				blockName = "Middle_" + ( m_CurrentBlockIndex - 1 );
+			}
+
+			blockPrefab = GetBlockPrefab ( blockName );
+
+			if ( blockPrefab != null )
+			{
+				Vector3 current = new Vector3 ( m_CurrentX, 0f, 0f );
+				CreateBlock ( blockPrefab, current );
+				m_CurrentBlockIndex++;
+			}
+			
+			// Background generation (only if layers exist)
+		if ( m_BackgroundLayers != null && m_BackgroundLayers.Length > 0 )
+		{
 			for ( int i = 0; i < m_BackgroundLayers.Length; i++ )
 			{
 				int random = Random.Range ( 0, 2 );
@@ -206,7 +215,7 @@ namespace RedRunner.TerrainGeneration
 					CreateBackgroundBlock ( block, current, m_BackgroundLayers [ i ], i );
 				}
 			}
-		}
+		}	}
 
 		public virtual void Remove ()
 		{
@@ -333,18 +342,21 @@ namespace RedRunner.TerrainGeneration
 
 		public static Block ChooseFrom ( Block[] blocks )
 		{
-			if ( blocks.Length <= 0 )
+			if ( blocks == null || blocks.Length <= 0 )
 			{
 				return null;
 			}
 			float total = 0;
 			for ( int i = 0; i < blocks.Length; i++ )
 			{
+				if ( blocks [ i ] == null ) continue;
 				total += blocks [ i ].Probability;
 			}
+			if ( total <= 0f ) return null;
 			float randomPoint = Random.value * total;
 			for ( int i = 0; i < blocks.Length; i++ )
 			{
+				if ( blocks [ i ] == null ) continue;
 				if ( randomPoint < blocks [ i ].Probability )
 				{
 					return blocks [ i ];
@@ -355,6 +367,24 @@ namespace RedRunner.TerrainGeneration
 				}
 			}
 			return blocks [ blocks.Length - 1 ];
+		}
+
+		public virtual void ResetPathFollowers ()
+		{
+			StartCoroutine ( ResetPathFollowersCoroutine () );
+		}
+
+		protected IEnumerator ResetPathFollowersCoroutine ()
+		{
+			int count = 0;
+			foreach ( KeyValuePair<Vector3, Block> block in m_Blocks )
+			{
+				block.Value.Reset ();
+				count++;
+				// Spread heavy work across frames — yield every 5 blocks
+				if ( count % 5 == 0 )
+					yield return null;
+			}
 		}
 
 	}

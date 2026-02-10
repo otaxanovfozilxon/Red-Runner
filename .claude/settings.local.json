@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.luxodd.com)",
+      "WebFetch(domain:app.luxoddgames.com)",
+      "WebFetch(domain:app.luxodd.com)",
+      "Bash(find:*)",
+      "Bash(git remote add:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

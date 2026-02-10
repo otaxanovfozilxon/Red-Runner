@@ -29,6 +29,7 @@ namespace RedRunner.Enemies
 		[SerializeField]
 		protected Vector3 m_DeadPosition;
 		protected Vector3 m_PupilDestination;
+		protected float m_NextSearchTime = 0f;
 
 		public virtual float Radius {
 			get {
@@ -70,13 +71,18 @@ namespace RedRunner.Enemies
 
 		protected virtual void Update ()
 		{
-			Collider2D [] colliders = Physics2D.OverlapCircleAll ( transform.parent.position, m_MaximumDistance, LayerMask.GetMask ( "Characters" ) );
-			for ( int i = 0; i < colliders.Length; i++ )
+			// Only do physics query every 0.2s instead of every frame
+			if ( Time.time >= m_NextSearchTime )
 			{
-				Character character = colliders [ i ].GetComponent<Character> ();
-				if ( character != null )
+				m_NextSearchTime = Time.time + 0.2f;
+				Collider2D [] colliders = Physics2D.OverlapCircleAll ( transform.parent.position, m_MaximumDistance, LayerMask.GetMask ( "Characters" ) );
+				for ( int i = 0; i < colliders.Length; i++ )
 				{
-					m_LatestCharacter = character;
+					Character character = colliders [ i ].GetComponent<Character> ();
+					if ( character != null )
+					{
+						m_LatestCharacter = character;
+					}
 				}
 			}
 			SetupPupil ();

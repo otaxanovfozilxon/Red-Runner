@@ -4,17 +4,18 @@ using UnityEngine;
 
 public class Property<T>
 {
-    class Act<TT>
+    // Non-generic inner class — avoids IL2CPP nested generic issues
+    class Act
     {
         public bool CallEvenIfDisabled = false;
         public MonoBehaviour Mb;
         public bool HasMb;
 
-        public Action<TT> Changed = null;
-        public Action<TT, TT> ChangedWithPrev = null;
+        public Action<T> Changed = null;
+        public Action<T, T> ChangedWithPrev = null;
     }
 
-    List<Act<T>> Callbacks = new List<Act<T>>();
+    List<Act> Callbacks = new List<Act>();
 
     T currentValue;
 
@@ -27,7 +28,7 @@ public class Property<T>
 
     public void AddEvent(Action<T> onChanged, MonoBehaviour mb, bool callEvenIfDisabled = false)
     {
-        Callbacks.Add(new Act<T>()
+        Callbacks.Add(new Act()
         {
             Mb = mb,
             HasMb = mb != null,
@@ -38,7 +39,7 @@ public class Property<T>
 
     public void AddEvent(Action<T, T> onChanged, MonoBehaviour mb, bool callEvenIfDisabled = false)
     {
-        Callbacks.Add(new Act<T>()
+        Callbacks.Add(new Act()
         {
             Mb = mb,
             HasMb = mb != null,
@@ -61,17 +62,29 @@ public class Property<T>
 
     public void RemoveEvent(Action<T> onChanged)
     {
-        Callbacks.RemoveAll(el => el.Changed == onChanged);
+        for (int i = Callbacks.Count - 1; i >= 0; i--)
+        {
+            if (Callbacks[i].Changed == onChanged)
+                Callbacks.RemoveAt(i);
+        }
     }
 
     public void RemoveEvent(Action<T, T> onChanged)
     {
-        Callbacks.RemoveAll(el => el.ChangedWithPrev == onChanged);
+        for (int i = Callbacks.Count - 1; i >= 0; i--)
+        {
+            if (Callbacks[i].ChangedWithPrev == onChanged)
+                Callbacks.RemoveAt(i);
+        }
     }
 
     public void RemoveEvent(MonoBehaviour mb)
     {
-        Callbacks.RemoveAll(el => el.Mb == mb);
+        for (int i = Callbacks.Count - 1; i >= 0; i--)
+        {
+            if (Callbacks[i].Mb == mb)
+                Callbacks.RemoveAt(i);
+        }
     }
 
     public void RemoveAllEvents()
@@ -94,13 +107,16 @@ public class Property<T>
         var oldValue = currentValue;
         currentValue = value;
 
-        Callbacks.RemoveAll(el =>
+        // Use explicit for-loop instead of RemoveAll lambda to avoid IL2CPP generic closure issues
+        var callbacksCopy = new List<Act>(Callbacks);
+        for (int i = callbacksCopy.Count - 1; i >= 0; i--)
         {
+            var el = callbacksCopy[i];
             try
             {
-                // Here comes the magic: if monoBehaviour has been already removed we'll have null here
+                // If monoBehaviour has been already removed we'll have null here
                 if (el.HasMb && el.Mb == null)
-                    return true;
+                    continue;
 
                 if (!el.HasMb || (el.Mb.gameObject.activeInHierarchy && el.Mb.enabled) || el.CallEvenIfDisabled)
                     if (mb == null || el.Mb == mb)
@@ -110,13 +126,17 @@ public class Property<T>
                         if (el.ChangedWithPrev != null)
                             el.ChangedWithPrev(currentValue, oldValue);
                     }
-                return false;
             }
             catch (Exception ex)
             {
                 UnityEngine.Debug.LogException(ex);
-                return false;
             }
-        });
+        }
+        // Cleanup dead MonoBehaviours from original list
+        for (int i = Callbacks.Count - 1; i >= 0; i--)
+        {
+            if (Callbacks[i].HasMb && Callbacks[i].Mb == null)
+                Callbacks.RemoveAt(i);
+        }
     }
 }

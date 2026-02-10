@@ -1,0 +1,52 @@
+<linker>
+    <!-- Game code -->
+    <assembly fullname="Assembly-CSharp" preserve="all"/>
+
+    <!-- Unity core -->
+    <assembly fullname="UnityEngine" preserve="all"/>
+    <assembly fullname="UnityEngine.CoreModule" preserve="all"/>
+    <assembly fullname="UnityEngine.AudioModule" preserve="all"/>
+    <assembly fullname="UnityEngine.UI" preserve="all"/>
+    <assembly fullname="UnityEngine.IMGUIModule" preserve="all"/>
+    <assembly fullname="UnityEngine.TextRenderingModule" preserve="all"/>
+    <assembly fullname="UnityEngine.UnityWebRequestModule" preserve="all"/>
+    <assembly fullname="UnityEngine.JSONSerializeModule" preserve="all"/>
+
+    <!-- Luxodd plugin pre-compiled DLL (SimpleEvent<T>, ISimpleEvent<T>, UnityMainThread, LoggerHelper, CoroutineManager) -->
+    <assembly fullname="Luxodd.Game.HelpersAndUtils" preserve="all"/>
+
+    <!-- Newtonsoft.Json (used by Luxodd plugin for JSON deserialization) -->
+    <assembly fullname="Newtonsoft.Json" preserve="all"/>
+    <assembly fullname="Unity.Newtonsoft.Json" preserve="all"/>
+
+    <!-- FullSerializer (used by SaveGameFree) -->
+    <assembly fullname="FullSerializer" preserve="all"/>
+
+    <!-- System.Web (HttpUtility.ParseQueryString used by FetchUrlQueryString) -->
+    <assembly fullname="System.Web" preserve="all"/>
+    <assembly fullname="System.Web.HttpUtility" preserve="all"/>
+
+    <!-- Async/Task infrastructure (used by Luxodd WebSocketService async methods) -->
+    <assembly fullname="System.Threading" preserve="all"/>
+    <assembly fullname="System.Threading.Tasks" preserve="all"/>
+    <assembly fullname="System.Runtime.CompilerServices.Unsafe" preserve="all"/>
+
+    <!-- LINQ (used by WebSocketCommandHandler.PrepareCommands) -->
+    <assembly fullname="System.Core" preserve="all"/>
+    <assembly fullname="System.Linq" preserve="all"/>
+
+    <!-- Delegates, events, generics, networking -->
+    <assembly fullname="System" preserve="all"/>
+
+    <!-- Core runtime (generics, collections, async state machines) -->
+    <assembly fullname="mscorlib" preserve="all"/>
+
+    <!-- Net standard types -->
+    <assembly fullname="netstandard" preserve="all"/>
+
+    <!-- SaveGameFree serialization -->
+    <assembly fullname="BayatGames.SaveGameFree" preserve="all"/>
+
+    <!-- TextMesh Pro -->
+    <assembly fullname="Unity.TextMeshPro" preserve="all"/>
+</linker>

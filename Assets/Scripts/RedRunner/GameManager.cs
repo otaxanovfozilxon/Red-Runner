@@ -10,6 +10,7 @@ using BayatGames.SaveGameFree.Serializers;
 using RedRunner.Characters;
 using RedRunner.Collectables;
 using RedRunner.TerrainGeneration;
+using RedRunner.UI;
 
 namespace RedRunner
 {
@@ -24,6 +25,8 @@ namespace RedRunner
         public static event ResetHandler OnReset;
         public static event ScoreHandler OnScoreChanged;
         public static event AudioEnabledHandler OnAudioEnabled;
+        public delegate void LifeHandler(int lives);
+        public static event LifeHandler OnLifeChanged;
 
         private static GameManager m_Singleton;
 
@@ -42,10 +45,16 @@ namespace RedRunner
         private string m_ShareText;
         [SerializeField]
         private string m_ShareUrl;
-        private float m_StartScoreX = 0f;
+        [SerializeField]
+        private int m_Lives = 3;
         private float m_HighScore = 0f;
         private float m_LastScore = 0f;
         private float m_Score = 0f;
+        private Vector3 m_LastCheckpointPosition;
+        private bool m_HasCheckpoint = false;
+        private int m_LevelCount = 0;
+        [SerializeField]
+        private GameObject m_LeaderboardPanel;
 
         private bool m_GameStarted = false;
         private bool m_GameRunning = false;
@@ -59,6 +68,13 @@ namespace RedRunner
 
 
         #region Getters
+        public int Lives
+        {
+            get
+            {
+                return m_Lives;
+            }
+        }
         public bool gameStarted
         {
             get
@@ -82,6 +98,14 @@ namespace RedRunner
                 return m_AudioEnabled;
             }
         }
+
+        public float Score
+        {
+            get
+            {
+                return m_Score;
+            }
+        }
         #endregion
 
         void Awake()
@@ -91,18 +115,17 @@ namespace RedRunner
                 Destroy(gameObject);
                 return;
             }
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SaveGame.Serializer = new SaveGameJsonSerializer();
+#else
             SaveGame.Serializer = new SaveGameBinarySerializer();
+#endif
             m_Singleton = this;
             m_Score = 0f;
+            m_Lives = 3;
 
-            if (SaveGame.Exists("coin"))
-            {
-                m_Coin.Value = SaveGame.Load<int>("coin");
-            }
-            else
-            {
-                m_Coin.Value = 0;
-            }
+            m_Lives = 3;
+            m_Coin.Value = 0;
             if (SaveGame.Exists("audioEnabled"))
             {
                 SetAudioEnabled(SaveGame.Load<bool>("audioEnabled"));
@@ -134,12 +157,43 @@ namespace RedRunner
         {
             if (isDead)
             {
-                StartCoroutine(DeathCrt());
+                m_Lives--;
+                if (OnLifeChanged != null)
+                {
+                    OnLifeChanged(m_Lives);
+                }
+
+                if (m_Lives > 0)
+                {
+                    Vector3 respawnPos;
+                    if (m_HasCheckpoint)
+                    {
+                        respawnPos = new Vector3(m_LastCheckpointPosition.x, m_LastCheckpointPosition.y + 10f, m_MainCharacter.transform.position.z);
+                    }
+                    else
+                    {
+                        // Custom spawn point if no checkpoint touched yet
+                        respawnPos = new Vector3(7.24f, 12.59f, m_MainCharacter.transform.position.z);
+                    }
+                    TerrainGeneration.TerrainGenerator.Singleton.ResetPathFollowers();
+                    StartCoroutine(RespawnCrt(respawnPos));
+                }
+                else
+                {
+                    StartCoroutine(DeathCrt());
+                }
             }
             else
             {
                 StopCoroutine("DeathCrt");
+                StopCoroutine("RespawnCrt");
             }
+        }
+
+        IEnumerator RespawnCrt(Vector3 respawnPosition)
+        {
+            yield return new WaitForSeconds(1f);
+            RespawnMainCharacter(respawnPosition);
         }
 
         IEnumerator DeathCrt()
@@ -157,15 +211,60 @@ namespace RedRunner
             yield return new WaitForSecondsRealtime(1.5f);
 
             EndGame();
-            var endScreen = UIManager.Singleton.UISCREENS.Find(el => el.ScreenInfo == UIScreenInfo.END_SCREEN);
-            UIManager.Singleton.OpenScreen(endScreen);
+            if (LuxoddIntegrationManager.Singleton != null)
+            {
+                LuxoddIntegrationManager.Singleton.TrackLevelEnd(m_LevelCount, (int)m_Score, () => {
+                    if (m_LeaderboardPanel != null)
+                    {
+                        m_LeaderboardPanel.SetActive(true);
+                    }
+                });
+            }
+            else
+            {
+                if (m_LeaderboardPanel != null)
+                {
+                    m_LeaderboardPanel.SetActive(true);
+                }
+            }
+            if (UIManager.Singleton != null && UIManager.Singleton.UISCREENS != null)
+            {
+                UIScreen endScreen = null;
+                foreach (var screen in UIManager.Singleton.UISCREENS)
+                {
+                    if (screen != null && screen.ScreenInfo == UIScreenInfo.END_SCREEN)
+                    {
+                        endScreen = screen;
+                        break;
+                    }
+                }
+                
+                if (endScreen != null)
+                {
+                    UIManager.Singleton.OpenScreen(endScreen);
+                }
+            }
         }
 
         private void Start()
         {
             m_MainCharacter.IsDead.AddEventAndFire(UpdateDeathEvent, this);
-            m_StartScoreX = m_MainCharacter.transform.position.x;
+            m_Coin.AddEventAndFire(OnCoinChanged, this);
             Init();
+        }
+
+        void OnCoinChanged(int coin)
+        {
+            UpdateScore();
+        }
+
+        void UpdateScore()
+        {
+            m_Score = (float)m_Coin.Value;
+            if (OnScoreChanged != null)
+            {
+                OnScoreChanged(m_Score, m_HighScore, m_LastScore);
+            }
         }
 
         public void Init()
@@ -179,22 +278,30 @@ namespace RedRunner
         {
             if (m_GameRunning)
             {
-                if (m_MainCharacter.transform.position.x > m_StartScoreX && m_MainCharacter.transform.position.x > m_Score)
-                {
-                    m_Score = m_MainCharacter.transform.position.x;
-                    if (OnScoreChanged != null)
-                    {
-                        OnScoreChanged(m_Score, m_HighScore, m_LastScore);
-                    }
-                }
+                
             }
         }
 
         IEnumerator Load()
         {
-            var startScreen = UIManager.Singleton.UISCREENS.Find(el => el.ScreenInfo == UIScreenInfo.START_SCREEN);
             yield return new WaitForSecondsRealtime(3f);
-            UIManager.Singleton.OpenScreen(startScreen);
+            if (UIManager.Singleton != null && UIManager.Singleton.UISCREENS != null)
+            {
+                UIScreen startScreen = null;
+                foreach (var screen in UIManager.Singleton.UISCREENS)
+                {
+                    if (screen != null && screen.ScreenInfo == UIScreenInfo.START_SCREEN)
+                    {
+                        startScreen = screen;
+                        break;
+                    }
+                }
+                
+                if (startScreen != null)
+                {
+                    UIManager.Singleton.OpenScreen(startScreen);
+                }
+            }
         }
 
         void OnApplicationQuit()
@@ -203,7 +310,6 @@ namespace RedRunner
             {
                 m_HighScore = m_Score;
             }
-            SaveGame.Save<int>("coin", m_Coin.Value);
             SaveGame.Save<float>("lastScore", m_Score);
             SaveGame.Save<float>("highScore", m_HighScore);
         }
@@ -231,6 +337,10 @@ namespace RedRunner
         public void StartGame()
         {
             m_GameStarted = true;
+            if (LuxoddIntegrationManager.Singleton != null)
+            {
+                LuxoddIntegrationManager.Singleton.TrackLevelBegin(m_LevelCount);
+            }
             ResumeGame();
         }
 
@@ -252,46 +362,47 @@ namespace RedRunner
             StopGame();
         }
 
-        public void RespawnMainCharacter()
+        public void RespawnMainCharacter(Vector3 position)
         {
-            RespawnCharacter(m_MainCharacter);
+            RespawnCharacter(m_MainCharacter, position);
         }
 
-        public void RespawnCharacter(Character character)
+        public void RespawnCharacter(Character character, Vector3 position)
         {
-            Block block = TerrainGenerator.Singleton.GetCharacterBlock();
-            if (block != null)
-            {
-                Vector3 position = block.transform.position;
-                position.y += 2.56f;
-                position.x += 1.28f;
-                character.transform.position = position;
-                character.Reset();
-            }
+            character.transform.position = position;
+            character.Reset();
         }
 
         public void Reset()
         {
+            m_Coin.Value = 0;
             m_Score = 0f;
+            m_Lives = 3;
+            m_HasCheckpoint = false;
+            m_LevelCount = 0; // Reset level count
+            if (m_LeaderboardPanel != null)
+            {
+                m_LeaderboardPanel.SetActive(false);
+            }
+            if (OnLifeChanged != null)
+            {
+                OnLifeChanged(m_Lives);
+            }
             if (OnReset != null)
             {
                 OnReset();
             }
         }
 
-        public void ShareOnTwitter()
+        public void SetCheckpoint(Vector3 position)
         {
-            Share("https://twitter.com/intent/tweet?text={0}&url={1}");
-        }
-
-        public void ShareOnGooglePlus()
-        {
-            Share("https://plus.google.com/share?text={0}&href={1}");
-        }
-
-        public void ShareOnFacebook()
-        {
-            Share("https://www.facebook.com/sharer/sharer.php?u={1}");
+            m_LastCheckpointPosition = position;
+            m_HasCheckpoint = true;
+            m_LevelCount++;
+            if (UI.LevelCompletionNotifier.Instance != null)
+            {
+                UI.LevelCompletionNotifier.Instance.ShowLevelComplete(m_LevelCount);
+            }
         }
 
         public void Share(string url)

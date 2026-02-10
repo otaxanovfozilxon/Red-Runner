@@ -35,14 +35,23 @@ namespace RedRunner.UI
 		}
 
 		public void SetTrigger ( string trigger )
+	{
+		if (m_ShareBackground != null)
 		{
 			m_ShareBackground.SetTrigger ( trigger );
+		}
+		
+		if ( m_ShareButtons != null )
+		{
 			for ( int i = 0; i < m_ShareButtons.Length; i++ )
 			{
-				m_ShareButtons [ i ].SetTrigger ( trigger );
+				if (m_ShareButtons[i] != null)
+				{
+					m_ShareButtons [ i ].SetTrigger ( trigger );
+				}
 			}
 		}
-
 	}
 
+}
 }

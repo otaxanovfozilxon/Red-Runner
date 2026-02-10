@@ -20,9 +20,24 @@ namespace RedRunner.UI
         {
             ResumeButton.SetButtonAction(() =>
             {
-                var inGameScreen = UIManager.Singleton.UISCREENS.Find(el => el.ScreenInfo == UIScreenInfo.IN_GAME_SCREEN);
-                UIManager.Singleton.OpenScreen(inGameScreen);
-                GameManager.Singleton.StartGame();
+                if (UIManager.Singleton != null && UIManager.Singleton.UISCREENS != null)
+                {
+                    UIScreen inGameScreen = null;
+                    foreach (var screen in UIManager.Singleton.UISCREENS)
+                    {
+                        if (screen != null && screen.ScreenInfo == UIScreenInfo.IN_GAME_SCREEN)
+                        {
+                            inGameScreen = screen;
+                            break;
+                        }
+                    }
+                    
+                    if (inGameScreen != null)
+                    {
+                        UIManager.Singleton.OpenScreen(inGameScreen);
+                        GameManager.Singleton.StartGame();
+                    }
+                }
             });
 
             HomeButton.SetButtonAction(() =>

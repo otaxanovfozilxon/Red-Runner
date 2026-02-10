@@ -36,6 +36,7 @@ namespace RedRunner.Utilities
 		protected Vector3 m_Velocity;
 		protected Vector3 m_SmoothVelocity;
 		protected float m_OverTimeSpeed = 0f;
+		protected float m_NextSmartCheckTime = 0f;
 
 		public virtual bool Stopped {
 			get {
@@ -83,11 +84,16 @@ namespace RedRunner.Utilities
 		void Update ()
 		{
 			if (m_Smart) {
-				Collider2D[] colliders = Physics2D.OverlapBoxAll (transform.position + m_RangeOffset, m_RangeSize, 0f, LayerMask.GetMask ("Characters"));
-				for (int i = 0; i < colliders.Length; i++) {
-					Character character = colliders [i].GetComponent<Character> ();
-					if (character != null) {
-						m_Stopped = false;
+				// Only do physics query every 0.15s instead of every frame
+				if ( Time.time >= m_NextSmartCheckTime )
+				{
+					m_NextSmartCheckTime = Time.time + 0.15f;
+					Collider2D[] colliders = Physics2D.OverlapBoxAll (transform.position + m_RangeOffset, m_RangeSize, 0f, LayerMask.GetMask ("Characters"));
+					for (int i = 0; i < colliders.Length; i++) {
+						Character character = colliders [i].GetComponent<Character> ();
+						if (character != null) {
+							m_Stopped = false;
+						}
 					}
 				}
 			} else {
@@ -128,7 +134,14 @@ namespace RedRunner.Utilities
 			while (Application.isPlaying) {
 				m_LastPosition = transform.position;
 				yield return new WaitForEndOfFrame ();
-				m_Velocity = (m_LastPosition - transform.position) / Time.deltaTime;
+				if (Time.deltaTime > 0f)
+				{
+					m_Velocity = (m_LastPosition - transform.position) / Time.deltaTime;
+				}
+				else
+				{
+					m_Velocity = Vector3.zero;
+				}
 			}
 		}
 
@@ -145,6 +158,24 @@ namespace RedRunner.Utilities
 			m_OverTimeSpeed = 0f;
 			m_CurrentPoint.MoveNext ();
 			m_IsMovingNext = false;
+		}
+
+		public virtual void Reset ()
+		{
+			StopAllCoroutines ();
+			m_Stopped = false;
+			m_IsMovingNext = false;
+			m_OverTimeSpeed = 0f;
+			if ( m_PathDefinition != null )
+			{
+				m_CurrentPoint = m_PathDefinition.GetPathEnumerator ();
+				m_CurrentPoint.MoveNext ();
+				if ( m_CurrentPoint.Current != null )
+				{
+					transform.position = m_CurrentPoint.Current.transform.position;
+				}
+			}
+			StartCoroutine ( CalcVelocity () );
 		}
 
 	}

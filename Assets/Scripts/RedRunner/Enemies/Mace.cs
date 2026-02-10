@@ -33,6 +33,13 @@ namespace RedRunner.Enemies
 		protected virtual void Awake ()
 		{
 			GameManager.OnReset += Reset;
+			// Pre-warm slam particle to avoid first-use freeze in WebGL
+			if ( m_ParticleSystem != null )
+			{
+				var p = Instantiate ( m_ParticleSystem, Vector3.one * -1000f, Quaternion.identity );
+				p.Stop ();
+				Destroy ( p.gameObject );
+			}
 		}
 
 		protected virtual void OnDestroy ()

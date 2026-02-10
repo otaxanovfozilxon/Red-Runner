@@ -29,7 +29,7 @@ namespace RedRunner
         }
 
         [SerializeField]
-        private List<UIScreen> m_Screens;
+        private List<UIScreen> m_Screens = new List<UIScreen>();
         private UIScreen m_ActiveScreen;
         private UIWindow m_ActiveWindow;
 		[SerializeField]
@@ -54,7 +54,17 @@ namespace RedRunner
 
         public UIScreen GetUIScreen(UIScreenInfo screenInfo)
         {
-            return m_Screens.Find(el => el.ScreenInfo == screenInfo);
+            if (m_Screens == null)
+                return null;
+            
+            foreach (var screen in m_Screens)
+            {
+                if (screen != null && screen.ScreenInfo == screenInfo)
+                {
+                    return screen;
+                }
+            }
+            return null;
         }
 
         void Awake()
@@ -81,35 +91,7 @@ namespace RedRunner
 
         void Update()
         {
-            if (Input.GetButtonDown("Cancel"))
-            {
-                //Added enumeration to store screen info, aka type, so it will be easier to understand it
-                var pauseScreen = GetUIScreen(UIScreenInfo.PAUSE_SCREEN);
-                var ingameScreen = GetUIScreen(UIScreenInfo.IN_GAME_SCREEN);
-
-                //If the pause screen is not open : open it otherwise close it
-                if (!pauseScreen.IsOpen)
-                {
-                    if (m_ActiveScreen == ingameScreen)
-                    {
-                        if (IsAsScreenOpen())
-                            CloseAllScreens();
-
-                        OpenScreen(pauseScreen);
-                        GameManager.Singleton.StopGame();
-                    }
-                }
-                else
-                {
-                    if (m_ActiveScreen == pauseScreen)
-                    {
-                        CloseScreen(pauseScreen);
-                        OpenScreen(ingameScreen);
-                        ////We are sure that we want to resume the game when we close a screen
-                        GameManager.Singleton.ResumeGame();
-                    }
-                }
-            }
+            // ESC / pause menu disabled
 
             if (Input.GetMouseButtonDown(0))
             {
@@ -183,6 +165,13 @@ namespace RedRunner
             CloseAllScreens();
             screen.UpdateScreenStatus(true);
             m_ActiveScreen = screen;
+
+            // Set default selected button for arcade navigation
+            var button = screen.GetComponentInChildren<UnityEngine.UI.Button>();
+            if (button != null)
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(button.gameObject);
+            }
         }
 
         public void CloseScreen(UIScreen screen)
@@ -196,12 +185,16 @@ namespace RedRunner
 
         public void CloseAllScreens()
         {
+            if (m_Screens == null)
+                return;
             foreach (var screen in m_Screens)
                 CloseScreen(screen);
         }
 
         bool IsAsScreenOpen()
         {
+            if (m_Screens == null)
+                return false;
             foreach (var screen in m_Screens)
             {
                 if (screen.IsOpen)
