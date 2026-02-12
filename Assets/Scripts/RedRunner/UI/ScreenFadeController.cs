@@ -117,7 +117,7 @@ namespace RedRunner.UI
 
             yield return AnimateRadius(FULLY_OPEN_RADIUS, FULLY_CLOSED_RADIUS, fadeDuration);
 
-            yield return new WaitForSeconds(holdDuration);
+            yield return new WaitForSecondsRealtime(holdDuration);
 
             yield return AnimateRadius(FULLY_CLOSED_RADIUS, FULLY_OPEN_RADIUS, fadeDuration);
 

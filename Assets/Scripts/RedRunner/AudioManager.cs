@@ -70,7 +70,46 @@ namespace RedRunner
 		void Awake ()
 		{
 			m_Singleton = this;
+			PreWarmAllClips ();
 			PlayMusic ();
+		}
+
+		/// <summary>
+		/// Pre-warm all audio clips by briefly playing them at zero volume.
+		/// In WebGL, the first play of each clip triggers decompression which freezes the game.
+		/// </summary>
+		void PreWarmAllClips ()
+		{
+			PreWarmClip ( m_SoundAudioSource, m_CoinSound );
+			PreWarmClip ( m_SoundAudioSource, m_ChestSound );
+			PreWarmClip ( m_SoundAudioSource, m_WaterSplashSound );
+			PreWarmClip ( m_SoundAudioSource, m_SpikeSound );
+			PreWarmClip ( m_SoundAudioSource, m_JumpSound );
+			PreWarmClip ( m_SoundAudioSource, m_MaceSlamSound );
+			PreWarmClip ( m_SoundAudioSource, m_ButtonClickSound );
+			if ( m_GroundedSounds != null )
+			{
+				foreach ( var clip in m_GroundedSounds )
+					PreWarmClip ( m_SoundAudioSource, clip );
+			}
+			if ( m_FootstepSounds != null )
+			{
+				foreach ( var clip in m_FootstepSounds )
+					PreWarmClip ( m_SoundAudioSource, clip );
+			}
+		}
+
+		void PreWarmClip ( AudioSource source, AudioClip clip )
+		{
+			if ( source == null || clip == null ) return;
+			float origVol = source.volume;
+			var origClip = source.clip;
+			source.volume = 0f;
+			source.clip = clip;
+			source.Play ();
+			source.Stop ();
+			source.clip = origClip;
+			source.volume = origVol;
 		}
 
 		#endregion

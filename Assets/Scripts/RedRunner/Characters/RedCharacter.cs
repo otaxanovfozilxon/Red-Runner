@@ -5,6 +5,8 @@ using UnityEngine.Events;
 
 using UnityStandardAssets.CrossPlatformInput;
 
+using Luxodd.Game;
+using Luxodd.Game.Scripts.Input;
 using RedRunner.Utilities;
 
 namespace RedRunner.Characters
@@ -276,24 +278,65 @@ namespace RedRunner.Characters
 			m_CurrentFootstepSoundIndex = 0;
 			GameManager.OnReset += GameManager_OnReset;
 			PreWarmParticles ();
+			PreWarmAudio ();
+			PreWarmSkeleton ();
 		}
 
 		void PreWarmParticles ()
 		{
-			// Pre-instantiate and destroy particles to warm up WebGL asset decompression
-			// This prevents the freeze on first death
-			if ( m_BloodParticleSystem != null )
+			// Particles that are Instantiated at runtime by enemy code (Water, Spike, etc.)
+			// MUST pre-warm via Instantiate to trigger WebGL asset decompression up front
+			PreWarmParticleViaInstantiate ( m_BloodParticleSystem );
+			PreWarmParticleViaInstantiate ( m_WaterParticleSystem );
+
+			// Particles that are only played in-place (never cloned at runtime)
+			PreWarmParticleInPlace ( m_RunParticleSystem );
+			PreWarmParticleInPlace ( m_JumpParticleSystem );
+		}
+
+		void PreWarmParticleViaInstantiate ( ParticleSystem ps )
+		{
+			if ( ps == null ) return;
+			var p = Instantiate ( ps, Vector3.one * -1000f, Quaternion.identity );
+			p.Simulate ( 0.01f, true, true );
+			p.Stop ( true, ParticleSystemStopBehavior.StopEmittingAndClear );
+			// Keep alive for 1 second so WebGL fully decompresses textures/shaders
+			Destroy ( p.gameObject, 1f );
+		}
+
+		void PreWarmParticleInPlace ( ParticleSystem ps )
+		{
+			if ( ps == null ) return;
+			ps.Simulate ( 0.01f, true, true );
+			ps.Stop ( true, ParticleSystemStopBehavior.StopEmittingAndClear );
+		}
+
+		void PreWarmSkeleton ()
+		{
+			// Briefly activate and deactivate skeleton to warm up ragdoll physics in WebGL
+			if ( m_Skeleton != null )
 			{
-				var p = Instantiate ( m_BloodParticleSystem, Vector3.one * -1000f, Quaternion.identity );
-				p.Stop ();
-				Destroy ( p.gameObject );
+				m_Skeleton.SetActive ( true, Vector2.zero );
+				m_Skeleton.SetActive ( false, Vector2.zero );
 			}
-			if ( m_WaterParticleSystem != null )
-			{
-				var p = Instantiate ( m_WaterParticleSystem, Vector3.one * -1000f, Quaternion.identity );
-				p.Stop ();
-				Destroy ( p.gameObject );
-			}
+		}
+
+		void PreWarmAudio ()
+		{
+			// Pre-warm audio sources to avoid WebGL decompression lag on first play
+			PreWarmAudioSource ( m_FootstepAudioSource );
+			PreWarmAudioSource ( m_JumpAndGroundedAudioSource );
+			PreWarmAudioSource ( m_MainAudioSource );
+		}
+
+		void PreWarmAudioSource ( AudioSource source )
+		{
+			if ( source == null ) return;
+			float origVol = source.volume;
+			source.volume = 0f;
+			source.Play ();
+			source.Stop ();
+			source.volume = origVol;
 		}
 
 		void Update ()
@@ -325,8 +368,12 @@ namespace RedRunner.Characters
 				m_Animator.SetFloat("Speed", 0f);
 				return;
 			}
-			Move ( CrossPlatformInputManager.GetAxis ( "Horizontal" ) );
-			if ( CrossPlatformInputManager.GetButtonDown ( "Jump" ) )
+			// Combine keyboard and arcade joystick input — take whichever has higher magnitude
+			float keyboardH = CrossPlatformInputManager.GetAxis ( "Horizontal" );
+			float arcadeH = ArcadeControls.GetStick ().X;
+			float horizontal = Mathf.Abs ( arcadeH ) > Mathf.Abs ( keyboardH ) ? arcadeH : keyboardH;
+			Move ( horizontal );
+			if ( CrossPlatformInputManager.GetButtonDown ( "Jump" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Red ) )
 			{
 				Jump ();
 			}
@@ -354,7 +401,7 @@ namespace RedRunner.Characters
 				}
 			}
 
-			if ( Input.GetButtonDown ( "Roll" ) )
+			if ( Input.GetButtonDown ( "Roll" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Black ) )
 			{
 				Vector2 force = new Vector2 ( 0f, 0f );
 				if ( transform.localScale.z > 0f )
@@ -378,7 +425,7 @@ namespace RedRunner.Characters
 			m_Animator.SetBool ( "IsDead", IsDead.Value );
 			m_Animator.SetBool ( "Block", m_Block );
 			m_Animator.SetBool ( "Guard", m_Guard );
-			if ( Input.GetButtonDown ( "Roll" ) )
+			if ( Input.GetButtonDown ( "Roll" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Black ) )
 			{
 				m_Animator.SetTrigger ( "Roll" );
 			}
@@ -524,6 +571,7 @@ namespace RedRunner.Characters
 		public override void Reset ()
 		{
             IsDead.Value = false;
+			IsInputBlocked = false;
 			m_ClosingEye = false;
 			m_Guard = false;
 			m_Block = false;

@@ -45,6 +45,7 @@ namespace RedRunner.TerrainGeneration
 		protected bool m_Reset = false;
 		protected int m_CurrentBlockIndex = 0;
 		protected Dictionary<string, Block> m_BlockPrefabCache = new Dictionary<string, Block>();
+		public bool IsPreLoaded { get; private set; }
 
 
 		public float PreviousX
@@ -81,7 +82,7 @@ namespace RedRunner.TerrainGeneration
 			m_Singleton = this;
 			m_Blocks = new Dictionary<Vector3, Block> ();
 			m_BackgroundBlocks = new Dictionary<Vector3, BackgroundBlock> ();
-			
+
 			// NULL CHECK: Prevent crash if settings or background layers are missing
 			if ( m_Settings != null && m_Settings.BackgroundLayers != null )
 			{
@@ -97,8 +98,32 @@ namespace RedRunner.TerrainGeneration
 				m_BackgroundLayers = new BackgroundLayer[0];
 				Debug.LogWarning("[TerrainGenerator] TerrainGenerationSettings or BackgroundLayers is null - no background will be generated");
 			}
-			
+
 			GameManager.OnReset += Reset;
+
+			// Pre-load all block prefabs spread across frames to prevent WebGL freeze
+			StartCoroutine ( PreLoadAllBlockPrefabsAsync () );
+		}
+
+		private IEnumerator PreLoadAllBlockPrefabsAsync ()
+		{
+			// Warm up all compiled shader variants to prevent first-use compilation stutter
+			Shader.WarmupAllShaders ();
+			yield return null;
+
+			// Load block prefabs one per frame so WebGL decompression doesn't freeze the browser
+			GetBlockPrefab ( "Start" );
+			yield return null;
+			GetBlockPrefab ( "Middle" );
+			yield return null;
+
+			for ( int i = 1; i <= 31; i++ )
+			{
+				GetBlockPrefab ( "Middle_" + i );
+				yield return null;
+			}
+
+			IsPreLoaded = true;
 		}
 
 		protected Block GetBlockPrefab ( string blockName )

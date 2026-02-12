@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+using Luxodd.Game;
+using Luxodd.Game.Scripts.Input;
+
 namespace RedRunner.UI
 {
     public class StartScreen : UIScreen
@@ -20,25 +23,7 @@ namespace RedRunner.UI
         {
             PlayButton.SetButtonAction(() =>
             {
-                var uiManager = UIManager.Singleton;
-                if (uiManager != null && uiManager.UISCREENS != null)
-                {
-                    UIScreen InGameScreen = null;
-                    foreach (var screen in uiManager.UISCREENS)
-                    {
-                        if (screen != null && screen.ScreenInfo == UIScreenInfo.IN_GAME_SCREEN)
-                        {
-                            InGameScreen = screen;
-                            break;
-                        }
-                    }
-                    
-                    if (InGameScreen != null)
-                    {
-                        uiManager.OpenScreen(InGameScreen);
-                        GameManager.Singleton.StartGame();
-                    }
-                }
+                LaunchGame();
             });
 
 
@@ -57,6 +42,29 @@ namespace RedRunner.UI
             FixTextRaycast();
         }
 
+        private void LaunchGame()
+        {
+            var uiManager = UIManager.Singleton;
+            if (uiManager != null && uiManager.UISCREENS != null)
+            {
+                UIScreen inGameScreen = null;
+                foreach (var screen in uiManager.UISCREENS)
+                {
+                    if (screen != null && screen.ScreenInfo == UIScreenInfo.IN_GAME_SCREEN)
+                    {
+                        inGameScreen = screen;
+                        break;
+                    }
+                }
+
+                if (inGameScreen != null)
+                {
+                    uiManager.OpenScreen(inGameScreen);
+                    GameManager.Singleton.StartGame();
+                }
+            }
+        }
+
         private void FixTextRaycast()
         {
             var texts = GetComponentsInChildren<Text>(true);
@@ -71,6 +79,16 @@ namespace RedRunner.UI
                 }
             }
         }
+        private void Update()
+        {
+            // Allow any arcade button to start the game from the start screen
+            if (IsOpen && (ArcadeControls.GetButtonDown(ArcadeButtonColor.Red) ||
+                           ArcadeControls.GetButtonDown(ArcadeButtonColor.Black)))
+            {
+                LaunchGame();
+            }
+        }
+
         public override void UpdateScreenStatus(bool open)
         {
             base.UpdateScreenStatus(open);

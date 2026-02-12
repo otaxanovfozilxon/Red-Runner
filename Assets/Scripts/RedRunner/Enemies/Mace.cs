@@ -37,8 +37,9 @@ namespace RedRunner.Enemies
 			if ( m_ParticleSystem != null )
 			{
 				var p = Instantiate ( m_ParticleSystem, Vector3.one * -1000f, Quaternion.identity );
-				p.Stop ();
-				Destroy ( p.gameObject );
+				p.Simulate ( 0.01f, true, true );
+				p.Stop ( true, ParticleSystemStopBehavior.StopEmittingAndClear );
+				Destroy ( p.gameObject, 1f );
 			}
 		}
 

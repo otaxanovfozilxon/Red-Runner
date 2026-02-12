@@ -211,22 +211,119 @@ namespace RedRunner
             yield return new WaitForSecondsRealtime(1.5f);
 
             EndGame();
-            if (LuxoddIntegrationManager.Singleton != null)
+
+            // Track level end and show leaderboard
+            if (LuxoddIntegrationManager.Singleton != null && LuxoddIntegrationManager.Singleton.IsConnected)
             {
                 LuxoddIntegrationManager.Singleton.TrackLevelEnd(m_LevelCount, (int)m_Score, () => {
+                    LuxoddIntegrationManager.Singleton.RefreshBalance();
                     if (m_LeaderboardPanel != null)
                     {
                         m_LeaderboardPanel.SetActive(true);
                     }
+                    // After 5 seconds of leaderboard, request transaction
+                    StartCoroutine(RequestTransactionAfterLeaderboard());
                 });
             }
             else
             {
+                // Not connected — show leaderboard then end screen
                 if (m_LeaderboardPanel != null)
                 {
                     m_LeaderboardPanel.SetActive(true);
                 }
+                ShowEndScreen();
             }
+        }
+
+        IEnumerator RequestTransactionAfterLeaderboard()
+        {
+            // Show leaderboard for 5 seconds
+            yield return new WaitForSecondsRealtime(5f);
+
+            // Hide leaderboard
+            if (m_LeaderboardPanel != null)
+            {
+                m_LeaderboardPanel.SetActive(false);
+            }
+
+            // Request session continue from Luxodd (keep score, checkpoint — system handles billing)
+            LuxoddIntegrationManager.Singleton.RequestSessionContinue(
+                () =>
+                {
+                    // Allowed — respawn at last checkpoint, restore lives, keep score
+                    ContinueAfterTransaction();
+                },
+                () =>
+                {
+                    // Denied — end session and return to arcade menu
+                    Debug.LogWarning("[Luxodd] Continue denied - ending session");
+                    LuxoddIntegrationManager.Singleton.EndSessionAndReturnToSystem();
+                }
+            );
+        }
+
+        void ContinueAfterTransaction()
+        {
+            StartCoroutine(ContinueAfterTransactionCrt());
+        }
+
+        IEnumerator ContinueAfterTransactionCrt()
+        {
+            // Resume time first so physics and camera work
+            m_GameStarted = true;
+            ResumeGame();
+
+            // Restore lives but keep score and checkpoint
+            m_Lives = 3;
+            if (OnLifeChanged != null)
+            {
+                OnLifeChanged(m_Lives);
+            }
+
+            // Determine respawn position (same as normal respawn in UpdateDeathEvent)
+            Vector3 respawnPos;
+            if (m_HasCheckpoint)
+            {
+                respawnPos = new Vector3(m_LastCheckpointPosition.x, m_LastCheckpointPosition.y + 10f, m_MainCharacter.transform.position.z);
+            }
+            else
+            {
+                respawnPos = new Vector3(7.24f, 12.59f, m_MainCharacter.transform.position.z);
+            }
+
+            // Reset path followers (same as normal respawn)
+            TerrainGeneration.TerrainGenerator.Singleton.ResetPathFollowers();
+
+            // Switch to in-game screen first
+            var ingameScreen = UIManager.Singleton.GetUIScreen(UIScreenInfo.IN_GAME_SCREEN);
+            if (ingameScreen != null)
+            {
+                UIManager.Singleton.OpenScreen(ingameScreen);
+            }
+
+            // Reset camera: stop fast-move, snap to respawn position
+            if (Utilities.CameraController.Singleton != null)
+            {
+                Utilities.CameraController.Singleton.fastMove = false;
+                var cam = Utilities.CameraController.Singleton.transform;
+                cam.position = new Vector3(respawnPos.x, respawnPos.y, cam.position.z);
+            }
+
+            // Wait 1 second before respawn (same delay as normal RespawnCrt)
+            yield return new WaitForSeconds(1f);
+
+            // Respawn character at checkpoint
+            RespawnMainCharacter(respawnPos);
+
+            if (LuxoddIntegrationManager.Singleton != null)
+            {
+                LuxoddIntegrationManager.Singleton.TrackLevelBegin(m_LevelCount);
+            }
+        }
+
+        void ShowEndScreen()
+        {
             if (UIManager.Singleton != null && UIManager.Singleton.UISCREENS != null)
             {
                 UIScreen endScreen = null;
@@ -238,7 +335,7 @@ namespace RedRunner
                         break;
                     }
                 }
-                
+
                 if (endScreen != null)
                 {
                     UIManager.Singleton.OpenScreen(endScreen);
@@ -285,6 +382,14 @@ namespace RedRunner
         IEnumerator Load()
         {
             yield return new WaitForSecondsRealtime(3f);
+
+            // Wait for terrain block prefabs to finish pre-loading across frames
+            if (TerrainGeneration.TerrainGenerator.Singleton != null)
+            {
+                while (!TerrainGeneration.TerrainGenerator.Singleton.IsPreLoaded)
+                    yield return null;
+            }
+
             if (UIManager.Singleton != null && UIManager.Singleton.UISCREENS != null)
             {
                 UIScreen startScreen = null;
@@ -347,13 +452,45 @@ namespace RedRunner
         public void StopGame()
         {
             m_GameRunning = false;
+            // IMPORTANT: Pause audio BEFORE setting timeScale to 0.
+            // In WebGL, Time.timeScale=0 sets audio pitch to near-zero which causes
+            // JS_Sound_SetPitch errors that freeze the browser.
+            AudioListener.pause = true;
+            StopAllAudioSources();
             Time.timeScale = 0f;
         }
 
         public void ResumeGame()
         {
             m_GameRunning = true;
+            // IMPORTANT: Restore timeScale BEFORE unpausing audio to avoid
+            // pitch being applied at near-zero timeScale.
             Time.timeScale = 1f;
+            AudioListener.pause = false;
+        }
+
+        private void StopAllAudioSources()
+        {
+            var sources = FindObjectsByType<AudioSource>(FindObjectsSortMode.None);
+            foreach (var source in sources)
+            {
+                if (source != null && source.isPlaying)
+                {
+                    source.Pause();
+                }
+            }
+        }
+
+        private void ResumeAllAudioSources()
+        {
+            var sources = FindObjectsByType<AudioSource>(FindObjectsSortMode.None);
+            foreach (var source in sources)
+            {
+                if (source != null)
+                {
+                    source.UnPause();
+                }
+            }
         }
 
         public void EndGame()
