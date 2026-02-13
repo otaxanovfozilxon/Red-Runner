@@ -46,6 +46,7 @@ namespace RedRunner.TerrainGeneration
 		protected int m_CurrentBlockIndex = 0;
 		protected Dictionary<string, Block> m_BlockPrefabCache = new Dictionary<string, Block>();
 		public bool IsPreLoaded { get; private set; }
+		private int m_GenerateFrameSkip = 0;
 
 
 		public float PreviousX
@@ -179,6 +180,12 @@ namespace RedRunner.TerrainGeneration
 				m_RemoveTime = Time.time + 5f;
 				Remove ();
 			}
+			// Throttle block generation: only create 1 block every 3 frames
+			// Each Instantiate<Block> is very heavy in WebGL (texture/mesh decompression)
+			m_GenerateFrameSkip++;
+			if ( m_GenerateFrameSkip < 3 )
+				return;
+			m_GenerateFrameSkip = 0;
 			Generate ();
 		}
 

@@ -22,6 +22,7 @@ namespace RedRunner.UI
         private Material m_Material;
         private RedCharacter m_Player;
         private bool m_PlayerSearchDone = false;
+        private Camera m_CachedCamera;
 
         private Coroutine m_FadeRoutine;
 
@@ -66,24 +67,23 @@ namespace RedRunner.UI
         {
             if (m_Player == null)
             {
-                if (m_PlayerSearchDone)
+                if (!m_PlayerSearchDone)
                 {
-                    m_Material.SetVector(_CenterID, new Vector4(0.5f, 0.5f, 0, 0));
-                    return;
+                    m_Player = FindFirstObjectByType<RedCharacter>();
+                    m_PlayerSearchDone = true;
                 }
-                m_Player = FindFirstObjectByType<RedCharacter>();
                 if (m_Player == null)
                 {
-                    m_PlayerSearchDone = true;
                     m_Material.SetVector(_CenterID, new Vector4(0.5f, 0.5f, 0, 0));
                     return;
                 }
             }
-            m_PlayerSearchDone = false;
 
-            if (Camera.main != null)
+            if (m_CachedCamera == null)
+                m_CachedCamera = Camera.main;
+            if (m_CachedCamera != null)
             {
-                Vector3 vp = Camera.main.WorldToViewportPoint(m_Player.transform.position);
+                Vector3 vp = m_CachedCamera.WorldToViewportPoint(m_Player.transform.position);
                 m_Material.SetVector(_CenterID, new Vector4(vp.x, vp.y, 0, 0));
             }
         }
