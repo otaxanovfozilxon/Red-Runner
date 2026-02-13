@@ -48,8 +48,8 @@ Shader "Unlit/UI_BGBlur"
 
 			fixed4 frag(v2f i) : SV_Target
 			{
-				// Semi-transparent dark overlay — lets the game world show through
-				return fixed4(0, 0, 0, 0.5);
+				// Very light overlay — game world is clearly visible with subtle tint
+				return fixed4(0, 0, 0, 0.15);
 			}
 			ENDCG
 		}
