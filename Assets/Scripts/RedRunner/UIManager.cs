@@ -162,6 +162,7 @@ namespace RedRunner
 
         public void OpenScreen(UIScreen screen)
         {
+            if (screen == null) return;
             CloseAllScreens();
             screen.UpdateScreenStatus(true);
             m_ActiveScreen = screen;
@@ -176,6 +177,7 @@ namespace RedRunner
 
         public void CloseScreen(UIScreen screen)
         {
+            if (screen == null) return;
             if (m_ActiveScreen == screen)
             {
                 m_ActiveScreen = null;
