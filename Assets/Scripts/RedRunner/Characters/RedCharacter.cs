@@ -277,20 +277,27 @@ namespace RedRunner.Characters
 			m_Block = false;
 			m_CurrentFootstepSoundIndex = 0;
 			GameManager.OnReset += GameManager_OnReset;
-			PreWarmParticles ();
-			PreWarmAudio ();
+			StartCoroutine ( PreWarmAsync () );
 		}
 
-		void PreWarmParticles ()
+		IEnumerator PreWarmAsync ()
 		{
-			// Particles that are Instantiated at runtime by enemy code (Water, Spike, etc.)
-			// MUST pre-warm via Instantiate to trigger WebGL asset decompression up front
+			// Spread pre-warming across frames — each operation gets its own frame
+			// to avoid freezing WebGL on startup
+			yield return null;
 			PreWarmParticleViaInstantiate ( m_BloodParticleSystem );
+			yield return null;
 			PreWarmParticleViaInstantiate ( m_WaterParticleSystem );
-
-			// Particles that are only played in-place (never cloned at runtime)
+			yield return null;
 			PreWarmParticleInPlace ( m_RunParticleSystem );
+			yield return null;
 			PreWarmParticleInPlace ( m_JumpParticleSystem );
+			yield return null;
+			PreWarmAudioSource ( m_FootstepAudioSource );
+			yield return null;
+			PreWarmAudioSource ( m_JumpAndGroundedAudioSource );
+			yield return null;
+			PreWarmAudioSource ( m_MainAudioSource );
 		}
 
 		void PreWarmParticleViaInstantiate ( ParticleSystem ps )
@@ -314,14 +321,6 @@ namespace RedRunner.Characters
 			if ( ps == null ) return;
 			ps.Simulate ( 0.01f, true, true );
 			ps.Stop ( true, ParticleSystemStopBehavior.StopEmittingAndClear );
-		}
-
-		void PreWarmAudio ()
-		{
-			// Pre-warm audio sources to avoid WebGL decompression lag on first play
-			PreWarmAudioSource ( m_FootstepAudioSource );
-			PreWarmAudioSource ( m_JumpAndGroundedAudioSource );
-			PreWarmAudioSource ( m_MainAudioSource );
 		}
 
 		void PreWarmAudioSource ( AudioSource source )

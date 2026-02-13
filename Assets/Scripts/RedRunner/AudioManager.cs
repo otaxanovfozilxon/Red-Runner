@@ -70,33 +70,54 @@ namespace RedRunner
 		void Awake ()
 		{
 			m_Singleton = this;
-			PreWarmAllClips ();
-			PlayMusic ();
+			// Spread audio pre-warming across frames to avoid freezing WebGL on startup
+			StartCoroutine ( PreWarmAllClipsAsync () );
 		}
 
 		/// <summary>
-		/// Pre-warm all audio clips by briefly playing them at zero volume.
+		/// Pre-warm all audio clips one per frame by briefly playing at zero volume.
 		/// In WebGL, the first play of each clip triggers decompression which freezes the game.
+		/// Spreading across frames prevents a multi-second freeze.
 		/// </summary>
-		void PreWarmAllClips ()
+		IEnumerator PreWarmAllClipsAsync ()
 		{
+			// Wait one frame so other Awake() methods finish first
+			yield return null;
+
 			PreWarmClip ( m_SoundAudioSource, m_CoinSound );
+			yield return null;
 			PreWarmClip ( m_SoundAudioSource, m_ChestSound );
+			yield return null;
 			PreWarmClip ( m_SoundAudioSource, m_WaterSplashSound );
+			yield return null;
 			PreWarmClip ( m_SoundAudioSource, m_SpikeSound );
+			yield return null;
 			PreWarmClip ( m_SoundAudioSource, m_JumpSound );
+			yield return null;
 			PreWarmClip ( m_SoundAudioSource, m_MaceSlamSound );
+			yield return null;
 			PreWarmClip ( m_SoundAudioSource, m_ButtonClickSound );
+			yield return null;
+
 			if ( m_GroundedSounds != null )
 			{
 				foreach ( var clip in m_GroundedSounds )
+				{
 					PreWarmClip ( m_SoundAudioSource, clip );
+					yield return null;
+				}
 			}
 			if ( m_FootstepSounds != null )
 			{
 				foreach ( var clip in m_FootstepSounds )
+				{
 					PreWarmClip ( m_SoundAudioSource, clip );
+					yield return null;
+				}
 			}
+
+			// Start music after all clips are warmed
+			PlayMusic ();
 		}
 
 		void PreWarmClip ( AudioSource source, AudioClip clip )

@@ -107,8 +107,10 @@ namespace RedRunner.TerrainGeneration
 
 		private IEnumerator PreLoadAllBlockPrefabsAsync ()
 		{
-			// Warm up all compiled shader variants to prevent first-use compilation stutter
-			Shader.WarmupAllShaders ();
+			// NOTE: Do NOT call Shader.WarmupAllShaders() here.
+			// In WebGL it forces compilation of ALL shader variants (including incompatible ones)
+			// in a single frame, causing GL_INVALID_OPERATION errors and multi-second freeze.
+			// WebGL compiles shaders lazily on first use, which is faster overall.
 			yield return null;
 
 			// Load block prefabs one per frame so WebGL decompression doesn't freeze the browser
@@ -168,7 +170,7 @@ namespace RedRunner.TerrainGeneration
 
 		protected virtual void Update ()
 		{
-			if ( m_Reset )
+			if ( m_Reset || !IsPreLoaded )
 			{
 				return;
 			}
