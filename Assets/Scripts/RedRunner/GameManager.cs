@@ -452,43 +452,37 @@ namespace RedRunner
         public void StopGame()
         {
             m_GameRunning = false;
-            // IMPORTANT: Pause audio BEFORE setting timeScale to 0.
-            // In WebGL, Time.timeScale=0 sets audio pitch to near-zero which causes
-            // JS_Sound_SetPitch errors that freeze the browser.
-            AudioListener.pause = true;
+            // CRITICAL FOR WEBGL: Stop() all audio sources to fully release WebGL channels
+            // BEFORE setting timeScale to 0. Pause() keeps channels alive, and WebGL still
+            // calls JS_Sound_SetPitch on all alive channels when timeScale changes — causing
+            // 86+ errors and freezing when pitch drops below the browser minimum (0.0625).
             StopAllAudioSources();
+            AudioListener.pause = true;
             Time.timeScale = 0f;
         }
 
         public void ResumeGame()
         {
             m_GameRunning = true;
-            // IMPORTANT: Restore timeScale BEFORE unpausing audio to avoid
-            // pitch being applied at near-zero timeScale.
             Time.timeScale = 1f;
             AudioListener.pause = false;
+            // Restart music since StopGame uses Stop() which releases the channel
+            if (AudioManager.Singleton != null)
+            {
+                AudioManager.Singleton.PlayMusic();
+            }
         }
 
         private void StopAllAudioSources()
         {
-            var sources = FindObjectsByType<AudioSource>(FindObjectsSortMode.None);
-            foreach (var source in sources)
-            {
-                if (source != null && source.isPlaying)
-                {
-                    source.Pause();
-                }
-            }
-        }
-
-        private void ResumeAllAudioSources()
-        {
+            // Use Stop() instead of Pause() — Stop() releases the WebGL audio channel,
+            // while Pause() keeps it alive and vulnerable to JS_Sound_SetPitch errors.
             var sources = FindObjectsByType<AudioSource>(FindObjectsSortMode.None);
             foreach (var source in sources)
             {
                 if (source != null)
                 {
-                    source.UnPause();
+                    source.Stop();
                 }
             }
         }
