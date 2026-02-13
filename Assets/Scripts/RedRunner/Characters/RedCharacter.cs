@@ -279,7 +279,6 @@ namespace RedRunner.Characters
 			GameManager.OnReset += GameManager_OnReset;
 			PreWarmParticles ();
 			PreWarmAudio ();
-			PreWarmSkeleton ();
 		}
 
 		void PreWarmParticles ()
@@ -297,11 +296,17 @@ namespace RedRunner.Characters
 		void PreWarmParticleViaInstantiate ( ParticleSystem ps )
 		{
 			if ( ps == null ) return;
-			var p = Instantiate ( ps, Vector3.one * -1000f, Quaternion.identity );
+			// Use a safe off-screen position (not too far — extreme positions cause Invalid worldAABB errors)
+			var p = Instantiate ( ps, new Vector3 ( 0f, -50f, 0f ), Quaternion.identity );
+			// Disable any physics components to prevent AABB errors
+			foreach ( var col in p.GetComponentsInChildren<Collider2D> ( true ) )
+				col.enabled = false;
+			foreach ( var rb in p.GetComponentsInChildren<Rigidbody2D> ( true ) )
+				rb.simulated = false;
 			p.Simulate ( 0.01f, true, true );
 			p.Stop ( true, ParticleSystemStopBehavior.StopEmittingAndClear );
-			// Keep alive for 1 second so WebGL fully decompresses textures/shaders
-			Destroy ( p.gameObject, 1f );
+			// DestroyImmediate works regardless of timeScale (Destroy uses scaled time, stuck at timeScale=0)
+			Destroy ( p.gameObject );
 		}
 
 		void PreWarmParticleInPlace ( ParticleSystem ps )
@@ -309,16 +314,6 @@ namespace RedRunner.Characters
 			if ( ps == null ) return;
 			ps.Simulate ( 0.01f, true, true );
 			ps.Stop ( true, ParticleSystemStopBehavior.StopEmittingAndClear );
-		}
-
-		void PreWarmSkeleton ()
-		{
-			// Briefly activate and deactivate skeleton to warm up ragdoll physics in WebGL
-			if ( m_Skeleton != null )
-			{
-				m_Skeleton.SetActive ( true, Vector2.zero );
-				m_Skeleton.SetActive ( false, Vector2.zero );
-			}
 		}
 
 		void PreWarmAudio ()

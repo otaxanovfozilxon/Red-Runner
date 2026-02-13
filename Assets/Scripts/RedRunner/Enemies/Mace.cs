@@ -36,10 +36,14 @@ namespace RedRunner.Enemies
 			// Pre-warm slam particle to avoid first-use freeze in WebGL
 			if ( m_ParticleSystem != null )
 			{
-				var p = Instantiate ( m_ParticleSystem, Vector3.one * -1000f, Quaternion.identity );
+				var p = Instantiate ( m_ParticleSystem, new Vector3 ( 0f, -50f, 0f ), Quaternion.identity );
+				foreach ( var col in p.GetComponentsInChildren<Collider2D> ( true ) )
+					col.enabled = false;
+				foreach ( var rb in p.GetComponentsInChildren<Rigidbody2D> ( true ) )
+					rb.simulated = false;
 				p.Simulate ( 0.01f, true, true );
 				p.Stop ( true, ParticleSystemStopBehavior.StopEmittingAndClear );
-				Destroy ( p.gameObject, 1f );
+				Destroy ( p.gameObject );
 			}
 		}
 
