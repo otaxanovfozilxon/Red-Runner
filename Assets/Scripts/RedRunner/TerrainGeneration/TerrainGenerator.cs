@@ -114,7 +114,7 @@ namespace RedRunner.TerrainGeneration
 			// WebGL compiles shaders lazily on first use, which is faster overall.
 			yield return null;
 
-			// Load block prefabs one per frame so WebGL decompression doesn't freeze the browser
+			// Phase 1: Load block prefab references from Resources (lightweight — no decompression)
 			GetBlockPrefab ( "Start" );
 			yield return null;
 			GetBlockPrefab ( "Middle" );
@@ -123,6 +123,25 @@ namespace RedRunner.TerrainGeneration
 			for ( int i = 1; i <= 31; i++ )
 			{
 				GetBlockPrefab ( "Middle_" + i );
+				yield return null;
+			}
+
+			// Phase 2: Pre-generate all loaded blocks during the loading screen.
+			// Instantiate<Block>() triggers heavy WebGL asset decompression (textures, meshes,
+			// shaders) on first use. Previously this happened AFTER the user clicked Play,
+			// causing a multi-second freeze. The Continue path didn't freeze because blocks
+			// already existed. By generating here (one per frame), decompression happens
+			// behind the loading screen. Update() won't interfere because it checks IsPreLoaded.
+			int prevIndex = -1;
+			while ( m_CurrentBlockIndex <= 100 )
+			{
+				if ( m_CurrentBlockIndex == prevIndex )
+				{
+					// Block prefab not found for this index — all available blocks generated
+					break;
+				}
+				prevIndex = m_CurrentBlockIndex;
+				Generate ();
 				yield return null;
 			}
 
@@ -328,6 +347,22 @@ namespace RedRunner.TerrainGeneration
 			}
 			blockPrefab.PreGenerate ( this );
 			Block block = Instantiate<Block> ( blockPrefab, position, Quaternion.identity );
+
+			// Stop all auto-playing AudioSources on the block.
+			// Block prefabs have ~162 AudioSources with PlayOnAwake=true, Loop=true.
+			// At timeScale=0 (pre-generation): Unity calls JS_Sound_SetPitch(pitch*0) → 1e-6
+			//   → browser throws NotSupportedError → corrupts entire WebGL audio context.
+			// At timeScale=1 (gameplay): 162 simultaneous looping sources exhaust WebGL's
+			//   limited audio channels (~32-64), killing all game audio.
+			// Game audio is handled centrally by AudioManager; scripts like Saw.cs
+			// explicitly call Play() on their own AudioSources when needed.
+			var blockSources = block.GetComponentsInChildren<AudioSource> ( true );
+			for ( int i = 0; i < blockSources.Length; i++ )
+			{
+				blockSources[i].Stop ();
+				blockSources[i].playOnAwake = false;
+			}
+
 			m_PreviousX = m_CurrentX;
 			m_CurrentX += block.Width;
 			m_Blocks.Add ( position, block );

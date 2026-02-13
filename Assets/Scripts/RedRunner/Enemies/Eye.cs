@@ -30,6 +30,7 @@ namespace RedRunner.Enemies
 		protected Vector3 m_DeadPosition;
 		protected Vector3 m_PupilDestination;
 		protected float m_NextSearchTime = 0f;
+		private int m_CharactersLayerMask = -1;
 
 		public virtual float Radius {
 			get {
@@ -66,7 +67,7 @@ namespace RedRunner.Enemies
 
 		protected virtual void Awake ()
 		{
-//			m_InitialPosition = m_Pupil.transform.position;
+			m_CharactersLayerMask = LayerMask.GetMask ( "Characters" );
 		}
 
 		protected virtual void Update ()
@@ -75,7 +76,7 @@ namespace RedRunner.Enemies
 			if ( Time.time >= m_NextSearchTime )
 			{
 				m_NextSearchTime = Time.time + 0.2f;
-				Collider2D [] colliders = Physics2D.OverlapCircleAll ( transform.parent.position, m_MaximumDistance, LayerMask.GetMask ( "Characters" ) );
+				Collider2D [] colliders = Physics2D.OverlapCircleAll ( transform.parent.position, m_MaximumDistance, m_CharactersLayerMask );
 				for ( int i = 0; i < colliders.Length; i++ )
 				{
 					Character character = colliders [ i ].GetComponent<Character> ();

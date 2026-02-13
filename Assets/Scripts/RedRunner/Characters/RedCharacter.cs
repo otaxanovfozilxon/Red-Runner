@@ -548,10 +548,19 @@ namespace RedRunner.Characters
 						                          m_BloodParticleSystem,
 						                          transform.position,
 						                          Quaternion.identity );
-					Destroy ( particle.gameObject, particle.main.duration );
+					// Use unscaled time — Destroy(obj, delay) uses scaled time
+					// and never fires when timeScale=0, leaving orphaned objects
+					StartCoroutine ( DestroyAfterRealtime ( particle.gameObject, particle.main.duration ) );
 				}
 				CameraController.Singleton.fastMove = true;
 			}
+		}
+
+		IEnumerator DestroyAfterRealtime ( GameObject obj, float delay )
+		{
+			yield return new WaitForSecondsRealtime ( delay );
+			if ( obj != null )
+				Destroy ( obj );
 		}
 
 		public override void EmitRunParticle ()

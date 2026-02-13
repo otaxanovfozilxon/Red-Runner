@@ -452,6 +452,13 @@ namespace RedRunner
         public void StopGame()
         {
             m_GameRunning = false;
+            // Force-stop ragdoll bone simulation BEFORE timeScale=0.
+            // Without this, bones stay simulated=true at frozen physics,
+            // causing infinite "Invalid worldAABB" errors every frame (Left Hand etc.)
+            if (m_MainCharacter != null && m_MainCharacter.Skeleton != null)
+            {
+                m_MainCharacter.Skeleton.ForceStopSimulation();
+            }
             // CRITICAL FOR WEBGL: Stop() all audio sources to fully release WebGL channels
             // BEFORE setting timeScale to 0. Pause() keeps channels alive, and WebGL still
             // calls JS_Sound_SetPitch on all alive channels when timeScale changes — causing

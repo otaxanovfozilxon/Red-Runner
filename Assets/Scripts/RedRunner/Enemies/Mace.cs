@@ -80,7 +80,15 @@ namespace RedRunner.Enemies
 		{
 			AudioManager.Singleton.PlayMaceSlamSound (transform.position);
 			ParticleSystem particle = Instantiate<ParticleSystem> (m_ParticleSystem, position, m_ParticleSystem.transform.rotation);
-			Destroy (particle.gameObject, particle.main.duration);
+			// Use unscaled time — Destroy(obj, delay) never fires at timeScale=0
+			StartCoroutine ( DestroyAfterRealtime ( particle.gameObject, particle.main.duration ) );
+		}
+
+		IEnumerator DestroyAfterRealtime ( GameObject obj, float delay )
+		{
+			yield return new WaitForSecondsRealtime ( delay );
+			if ( obj != null )
+				Destroy ( obj );
 		}
 
 		public override void Kill (Character target)

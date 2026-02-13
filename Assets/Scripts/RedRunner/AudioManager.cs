@@ -65,11 +65,25 @@ namespace RedRunner
 
 		#endregion
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+		[System.Runtime.InteropServices.DllImport("__Internal")]
+		private static extern void WebGLPatchAudioPitch ();
+#endif
+
 		#region MonoBehaviour Messages
 
 		void Awake ()
 		{
 			m_Singleton = this;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+			// Patch HTMLMediaElement.playbackRate BEFORE any audio plays.
+			// Unity's WebGL audio bridge computes pitch = AudioSource.pitch * Time.timeScale.
+			// At timeScale=0 this produces ~1e-6, which browsers reject with NotSupportedError,
+			// corrupting the entire audio context and killing all subsequent audio.
+			WebGLPatchAudioPitch ();
+#endif
+
 			// Spread audio pre-warming across frames to avoid freezing WebGL on startup
 			StartCoroutine ( PreWarmAllClipsAsync () );
 		}
@@ -84,19 +98,25 @@ namespace RedRunner
 			// Wait one frame so other Awake() methods finish first
 			yield return null;
 
+			// Pre-warm the MUSIC clip first (was missing — caused silent/broken music in WebGL)
+			PreWarmClip ( m_MusicAudioSource, m_MusicClip );
+			yield return null;
+
+			// Pre-warm sound effect clips — use each AudioSource at least once
+			// to activate its WebGL audio channel
 			PreWarmClip ( m_SoundAudioSource, m_CoinSound );
 			yield return null;
-			PreWarmClip ( m_SoundAudioSource, m_ChestSound );
+			PreWarmClip ( m_CoinAudioSource, m_ChestSound );
 			yield return null;
-			PreWarmClip ( m_SoundAudioSource, m_WaterSplashSound );
+			PreWarmClip ( m_DieAudioSource, m_WaterSplashSound );
 			yield return null;
 			PreWarmClip ( m_SoundAudioSource, m_SpikeSound );
 			yield return null;
 			PreWarmClip ( m_SoundAudioSource, m_JumpSound );
 			yield return null;
-			PreWarmClip ( m_SoundAudioSource, m_MaceSlamSound );
+			PreWarmClip ( m_MaceSlamAudioSource, m_MaceSlamSound );
 			yield return null;
-			PreWarmClip ( m_SoundAudioSource, m_ButtonClickSound );
+			PreWarmClip ( m_UIAudioSource, m_ButtonClickSound );
 			yield return null;
 
 			if ( m_GroundedSounds != null )
@@ -116,8 +136,8 @@ namespace RedRunner
 				}
 			}
 
-			// Start music after all clips are warmed
-			PlayMusic ();
+			// Don't call PlayMusic() here — AudioListener is paused during Init().
+			// Music will start when ResumeGame() is called from StartGame().
 		}
 
 		void PreWarmClip ( AudioSource source, AudioClip clip )
@@ -139,7 +159,9 @@ namespace RedRunner
 
 		public void PlayMusic ()
 		{
+			if ( m_MusicAudioSource == null || m_MusicClip == null ) return;
 			m_MusicAudioSource.clip = m_MusicClip;
+			m_MusicAudioSource.loop = true;
 			m_MusicAudioSource.Play ();
 		}
 
@@ -150,6 +172,7 @@ namespace RedRunner
 
 		public void PlaySoundOn (AudioSource audio, AudioClip clip)
 		{
+			if ( audio == null || clip == null ) return;
 			audio.clip = clip;
 			audio.Play ();
 		}

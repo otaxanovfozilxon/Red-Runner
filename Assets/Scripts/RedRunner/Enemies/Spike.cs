@@ -21,6 +21,26 @@ namespace RedRunner.Enemies
 			}
 		}
 
+		void Awake ()
+		{
+			GameManager.OnReset += Reset;
+		}
+
+		void OnDestroy ()
+		{
+			GameManager.OnReset -= Reset;
+		}
+
+		void Reset ()
+		{
+			// Disconnect joint on reset — leaving it connected to the skeleton Body
+			// can pull bones to extreme positions causing Invalid worldAABB errors
+			if (m_FixedJoint2D != null)
+			{
+				m_FixedJoint2D.connectedBody = null;
+			}
+		}
+
 		void OnCollisionStay2D (Collision2D collision2D)
 		{
 			Character character = collision2D.collider.GetComponent<Character> ();

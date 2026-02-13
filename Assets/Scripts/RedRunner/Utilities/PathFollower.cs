@@ -37,6 +37,7 @@ namespace RedRunner.Utilities
 		protected Vector3 m_SmoothVelocity;
 		protected float m_OverTimeSpeed = 0f;
 		protected float m_NextSmartCheckTime = 0f;
+		private int m_CharactersLayerMask = -1;
 
 		public virtual bool Stopped {
 			get {
@@ -56,6 +57,7 @@ namespace RedRunner.Utilities
 		void Awake ()
 		{
 			m_Stopped = m_Smart;
+			m_CharactersLayerMask = LayerMask.GetMask ("Characters");
 		}
 
 		void Start ()
@@ -88,7 +90,7 @@ namespace RedRunner.Utilities
 				if ( Time.time >= m_NextSmartCheckTime )
 				{
 					m_NextSmartCheckTime = Time.time + 0.15f;
-					Collider2D[] colliders = Physics2D.OverlapBoxAll (transform.position + m_RangeOffset, m_RangeSize, 0f, LayerMask.GetMask ("Characters"));
+					Collider2D[] colliders = Physics2D.OverlapBoxAll (transform.position + m_RangeOffset, m_RangeSize, 0f, m_CharactersLayerMask);
 					for (int i = 0; i < colliders.Length; i++) {
 						Character character = colliders [i].GetComponent<Character> ();
 						if (character != null) {
