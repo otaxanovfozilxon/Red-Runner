@@ -2,6 +2,7 @@ Shader "UI/CircleFade1"
 {
     Properties
     {
+        [HideInInspector] _MainTex ("Texture", 2D) = "white" {}
         _Color ("Color", Color) = (0,0,0,1)
         _Center ("Center", Vector) = (0.5,0.5,0,0)
         _Radius ("Radius", Range(0,2)) = 1.5
