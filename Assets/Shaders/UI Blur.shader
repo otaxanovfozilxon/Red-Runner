@@ -1,12 +1,14 @@
 // WebGL-compatible UI background blur replacement
 // GrabPass is not supported in WebGL, so we use a semi-transparent dark overlay instead
+// Note: The Blur.mat has _Color=(1,1,1,1) baked in from the old shader, so we ignore
+// the material _Color and use a hardcoded dark tint to let the game show through.
 
 Shader "Unlit/UI_BGBlur"
 {
 	Properties
 	{
 		[HideInInspector] _MainTex ("Texture", 2D) = "white" {}
-		_Color ("Tint Color", Color) = (0, 0, 0, 0.7)
+		_Color ("Tint Color", Color) = (0, 0, 0, 0.5)
 		_Size ("Size", float) = 1
 	}
 	SubShader
@@ -28,32 +30,26 @@ Shader "Unlit/UI_BGBlur"
 			{
 				float4 vertex : POSITION;
 				float2 uv : TEXCOORD0;
-				fixed4 color : COLOR;
 			};
 
 			struct v2f
 			{
-				float2 uv : TEXCOORD0;
 				float4 vertex : SV_POSITION;
-				fixed4 color : COLOR;
 			};
 
 			sampler2D _MainTex;
-			fixed4 _Color;
 
 			v2f vert(appdata v)
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv = v.uv;
-				o.color = v.color * _Color;
 				return o;
 			}
 
 			fixed4 frag(v2f i) : SV_Target
 			{
-				fixed4 texCol = tex2D(_MainTex, i.uv);
-				return texCol * i.color;
+				// Semi-transparent dark overlay — lets the game world show through
+				return fixed4(0, 0, 0, 0.5);
 			}
 			ENDCG
 		}
