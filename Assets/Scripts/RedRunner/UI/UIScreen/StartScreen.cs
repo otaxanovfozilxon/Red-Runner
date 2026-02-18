@@ -19,6 +19,9 @@ namespace RedRunner.UI
         [SerializeField]
         protected Button ExitButton = null;
 
+        private const float AutoStartDelay = 30f;
+        private float m_AutoStartTimer;
+
         private void Start()
         {
             PlayButton.SetButtonAction(() =>
@@ -44,6 +47,10 @@ namespace RedRunner.UI
 
         private void LaunchGame()
         {
+            if (AudioManager.Singleton != null)
+            {
+                AudioManager.Singleton.StopMenuMusic();
+            }
             var uiManager = UIManager.Singleton;
             if (uiManager != null && uiManager.UISCREENS != null)
             {
@@ -81,9 +88,20 @@ namespace RedRunner.UI
         }
         private void Update()
         {
+            if (!IsOpen)
+                return;
+
             // Allow any arcade button to start the game from the start screen
-            if (IsOpen && (ArcadeControls.GetButtonDown(ArcadeButtonColor.Red) ||
-                           ArcadeControls.GetButtonDown(ArcadeButtonColor.Black)))
+            if (ArcadeControls.GetButtonDown(ArcadeButtonColor.Red) ||
+                ArcadeControls.GetButtonDown(ArcadeButtonColor.Black))
+            {
+                LaunchGame();
+                return;
+            }
+
+            // Auto-start the game after 30 seconds of inactivity
+            m_AutoStartTimer += Time.unscaledDeltaTime;
+            if (m_AutoStartTimer >= AutoStartDelay)
             {
                 LaunchGame();
             }
@@ -92,6 +110,14 @@ namespace RedRunner.UI
         public override void UpdateScreenStatus(bool open)
         {
             base.UpdateScreenStatus(open);
+            if (open)
+            {
+                m_AutoStartTimer = 0f;
+                if (AudioManager.Singleton != null)
+                {
+                    AudioManager.Singleton.PlayMenuMusic();
+                }
+            }
         }
     }
 }

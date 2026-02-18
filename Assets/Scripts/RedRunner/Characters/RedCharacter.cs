@@ -79,6 +79,9 @@ namespace RedRunner.Characters
 		protected Vector3 m_InitialScale;
 		protected Vector3 m_InitialPosition;
 
+		private const float IdleDeathDelay = 30f;
+		private float m_IdleTimer;
+
 		#endregion
 
 		#region Properties
@@ -366,8 +369,30 @@ namespace RedRunner.Characters
 			float keyboardH = CrossPlatformInputManager.GetAxis ( "Horizontal" );
 			float arcadeH = ArcadeControls.GetStick ().X;
 			float horizontal = Mathf.Abs ( arcadeH ) > Mathf.Abs ( keyboardH ) ? arcadeH : keyboardH;
+
+			bool jumpPressed = CrossPlatformInputManager.GetButtonDown ( "Jump" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Red );
+			bool rollPressed = Input.GetButtonDown ( "Roll" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Black );
+			bool guardPressed = CrossPlatformInputManager.GetButtonDown ( "Guard" );
+			bool firePressed = CrossPlatformInputManager.GetButtonDown ( "Fire" );
+			bool hasInput = Mathf.Abs ( horizontal ) > 0.01f || jumpPressed || rollPressed || guardPressed || firePressed;
+
+			// Kill the player if idle for too long
+			if ( hasInput )
+			{
+				m_IdleTimer = 0f;
+			}
+			else
+			{
+				m_IdleTimer += Time.deltaTime;
+				if ( m_IdleTimer >= IdleDeathDelay && !IsDead.Value )
+				{
+					Die ();
+					return;
+				}
+			}
+
 			Move ( horizontal );
-			if ( CrossPlatformInputManager.GetButtonDown ( "Jump" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Red ) )
+			if ( jumpPressed )
 			{
 				Jump ();
 			}
@@ -375,13 +400,13 @@ namespace RedRunner.Characters
 			{
 				StartCoroutine ( CloseEye () );
 			}
-			if ( CrossPlatformInputManager.GetButtonDown ( "Guard" ) )
+			if ( guardPressed )
 			{
 				m_Guard = !m_Guard;
 			}
 			if ( m_Guard )
 			{
-				if ( CrossPlatformInputManager.GetButtonDown ( "Fire" ) )
+				if ( firePressed )
 				{
 					m_Animator.SetTrigger ( m_Actions [ m_CurrentActionIndex ] );
 					if ( m_CurrentActionIndex < m_Actions.Length - 1 )
@@ -395,7 +420,7 @@ namespace RedRunner.Characters
 				}
 			}
 
-			if ( Input.GetButtonDown ( "Roll" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Black ) )
+			if ( rollPressed )
 			{
 				Vector2 force = new Vector2 ( 0f, 0f );
 				if ( transform.localScale.z > 0f )
@@ -565,7 +590,7 @@ namespace RedRunner.Characters
 
 		public override void EmitRunParticle ()
 		{
-			if ( !IsDead.Value )
+			if ( !IsDead.Value && m_Speed.x > 0.1f )
 			{
 				m_RunParticleSystem.Emit ( 1 );
 			}
@@ -579,6 +604,7 @@ namespace RedRunner.Characters
 			m_Guard = false;
 			m_Block = false;
 			m_CurrentFootstepSoundIndex = 0;
+			m_IdleTimer = 0f;
 			transform.localScale = m_InitialScale;
 			m_Rigidbody2D.linearVelocity = Vector2.zero;
 			m_Skeleton.SetActive ( false, m_Rigidbody2D.linearVelocity );

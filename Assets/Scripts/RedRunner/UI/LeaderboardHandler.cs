@@ -18,7 +18,7 @@ namespace RedRunner.UI
         [Header("Leaderboard UI")]
         [SerializeField] private List<TextMeshProUGUI> _playerNameTexts;
         [SerializeField] private List<TextMeshProUGUI> _playerScoreTexts;
-        [SerializeField] private int _leaderboardSize = 10;
+        [SerializeField] private int _leaderboardSize = 5;
 
         void OnEnable()
         {
@@ -57,7 +57,7 @@ namespace RedRunner.UI
 
             int index = 0;
 
-            // 1. Show CURRENT PLAYER first
+            // 1. Show CURRENT PLAYER at slot 0 (live session name + score)
             if (_playerNameTexts.Count > 0)
             {
                 string pName = "Guest";
@@ -67,7 +67,7 @@ namespace RedRunner.UI
                 {
                     pName = LuxoddIntegrationManager.Singleton.PlayerName;
                 }
-                
+
                 if (GameManager.Singleton != null)
                 {
                     pScore = (int)GameManager.Singleton.Score;
@@ -78,16 +78,12 @@ namespace RedRunner.UI
                 index = 1;
             }
 
-            // 2. Populate the rest from the Top Leaderboard
+            // 2. Fill remaining 4 slots from the server leaderboard
             if (response.Leaderboard != null)
             {
                 for (int i = 0; i < response.Leaderboard.Count && index < _playerNameTexts.Count && index < _leaderboardSize; i++)
                 {
                     var data = response.Leaderboard[i];
-                    
-                    // Skip if it's the current player (optional, depends on if we want them twice)
-                    // if (data.PlayerName == LuxoddIntegrationManager.Singleton.PlayerName) continue;
-
                     _playerNameTexts[index].text = FormatName(data.PlayerName);
                     _playerScoreTexts[index].text = data.TotalScore.ToString();
                     index++;

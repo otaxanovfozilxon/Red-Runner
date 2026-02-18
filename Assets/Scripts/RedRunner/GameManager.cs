@@ -50,8 +50,7 @@ namespace RedRunner
         private float m_HighScore = 0f;
         private float m_LastScore = 0f;
         private float m_Score = 0f;
-        private Vector3 m_LastCheckpointPosition;
-        private bool m_HasCheckpoint = false;
+        private List<Vector3> m_Checkpoints = new List<Vector3>();
         private int m_LevelCount = 0;
         [SerializeField]
         private GameObject m_LeaderboardPanel;
@@ -157,6 +156,11 @@ namespace RedRunner
         {
             if (isDead)
             {
+                if (AudioManager.Singleton != null)
+                {
+                    AudioManager.Singleton.PlayGameOverSound();
+                }
+
                 m_Lives--;
                 if (OnLifeChanged != null)
                 {
@@ -165,16 +169,7 @@ namespace RedRunner
 
                 if (m_Lives > 0)
                 {
-                    Vector3 respawnPos;
-                    if (m_HasCheckpoint)
-                    {
-                        respawnPos = new Vector3(m_LastCheckpointPosition.x, m_LastCheckpointPosition.y + 10f, m_MainCharacter.transform.position.z);
-                    }
-                    else
-                    {
-                        // Custom spawn point if no checkpoint touched yet
-                        respawnPos = new Vector3(7.24f, 12.59f, m_MainCharacter.transform.position.z);
-                    }
+                    Vector3 respawnPos = GetRespawnPosition();
                     TerrainGeneration.TerrainGenerator.Singleton.ResetPathFollowers();
                     StartCoroutine(RespawnCrt(respawnPos));
                 }
@@ -227,13 +222,23 @@ namespace RedRunner
             }
             else
             {
-                // Not connected — show leaderboard then end screen
+                // Not connected — show leaderboard for 5 seconds then end screen
                 if (m_LeaderboardPanel != null)
                 {
                     m_LeaderboardPanel.SetActive(true);
                 }
-                ShowEndScreen();
+                StartCoroutine(ShowEndScreenAfterLeaderboard());
             }
+        }
+
+        IEnumerator ShowEndScreenAfterLeaderboard()
+        {
+            yield return new WaitForSecondsRealtime(5f);
+            if (m_LeaderboardPanel != null)
+            {
+                m_LeaderboardPanel.SetActive(false);
+            }
+            ShowEndScreen();
         }
 
         IEnumerator RequestTransactionAfterLeaderboard()
@@ -281,16 +286,8 @@ namespace RedRunner
                 OnLifeChanged(m_Lives);
             }
 
-            // Determine respawn position (same as normal respawn in UpdateDeathEvent)
-            Vector3 respawnPos;
-            if (m_HasCheckpoint)
-            {
-                respawnPos = new Vector3(m_LastCheckpointPosition.x, m_LastCheckpointPosition.y + 10f, m_MainCharacter.transform.position.z);
-            }
-            else
-            {
-                respawnPos = new Vector3(7.24f, 12.59f, m_MainCharacter.transform.position.z);
-            }
+            // Determine respawn position based on current player position relative to checkpoints
+            Vector3 respawnPos = GetRespawnPosition();
 
             // Reset path followers (same as normal respawn)
             TerrainGeneration.TerrainGenerator.Singleton.ResetPathFollowers();
@@ -473,11 +470,6 @@ namespace RedRunner
             m_GameRunning = true;
             Time.timeScale = 1f;
             AudioListener.pause = false;
-            // Restart music since StopGame uses Stop() which releases the channel
-            if (AudioManager.Singleton != null)
-            {
-                AudioManager.Singleton.PlayMusic();
-            }
         }
 
         private void StopAllAudioSources()
@@ -516,7 +508,7 @@ namespace RedRunner
             m_Coin.Value = 0;
             m_Score = 0f;
             m_Lives = 3;
-            m_HasCheckpoint = false;
+            m_Checkpoints.Clear();
             m_LevelCount = 0; // Reset level count
             if (m_LeaderboardPanel != null)
             {
@@ -532,10 +524,25 @@ namespace RedRunner
             }
         }
 
+        private Vector3 GetRespawnPosition()
+        {
+            float playerX = m_MainCharacter.transform.position.x;
+            float playerZ = m_MainCharacter.transform.position.z;
+
+            for (int i = m_Checkpoints.Count - 1; i >= 0; i--)
+            {
+                if (m_Checkpoints[i].x <= playerX)
+                {
+                    return new Vector3(m_Checkpoints[i].x, m_Checkpoints[i].y + 10f, playerZ);
+                }
+            }
+
+            return new Vector3(7.24f, 12.59f, playerZ);
+        }
+
         public void SetCheckpoint(Vector3 position)
         {
-            m_LastCheckpointPosition = position;
-            m_HasCheckpoint = true;
+            m_Checkpoints.Add(position);
             m_LevelCount++;
             if (UI.LevelCompletionNotifier.Instance != null)
             {

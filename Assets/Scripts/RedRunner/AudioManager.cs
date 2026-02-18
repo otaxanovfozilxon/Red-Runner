@@ -40,7 +40,7 @@ namespace RedRunner
 		[Header ("Music Clips")]
 		[Space]
 		[SerializeField]
-		protected AudioClip m_MusicClip;
+		protected AudioClip m_MenuMusicClip;
 
 		[Header ("Sound Clips")]
 		[Space]
@@ -62,6 +62,8 @@ namespace RedRunner
 		protected AudioClip m_MaceSlamSound;
 		[SerializeField]
 		protected AudioClip m_ButtonClickSound;
+		[SerializeField]
+		protected AudioClip m_GameOverSound;
 
 		#endregion
 
@@ -98,10 +100,6 @@ namespace RedRunner
 			// Wait one frame so other Awake() methods finish first
 			yield return null;
 
-			// Pre-warm the MUSIC clip first (was missing — caused silent/broken music in WebGL)
-			PreWarmClip ( m_MusicAudioSource, m_MusicClip );
-			yield return null;
-
 			// Pre-warm sound effect clips — use each AudioSource at least once
 			// to activate its WebGL audio channel
 			PreWarmClip ( m_SoundAudioSource, m_CoinSound );
@@ -117,6 +115,10 @@ namespace RedRunner
 			PreWarmClip ( m_MaceSlamAudioSource, m_MaceSlamSound );
 			yield return null;
 			PreWarmClip ( m_UIAudioSource, m_ButtonClickSound );
+			yield return null;
+			PreWarmClip ( m_MusicAudioSource, m_MenuMusicClip );
+			yield return null;
+			PreWarmClip ( m_DieAudioSource, m_GameOverSound );
 			yield return null;
 
 			if ( m_GroundedSounds != null )
@@ -136,8 +138,7 @@ namespace RedRunner
 				}
 			}
 
-			// Don't call PlayMusic() here — AudioListener is paused during Init().
-			// Music will start when ResumeGame() is called from StartGame().
+			// Don't call PlayMenuMusic() here — it will start when the StartScreen opens.
 		}
 
 		void PreWarmClip ( AudioSource source, AudioClip clip )
@@ -157,12 +158,31 @@ namespace RedRunner
 
 		#region Methods
 
-		public void PlayMusic ()
+		[Header ("Music Settings")]
+		[SerializeField]
+		[Range (0f, 1f)]
+		protected float m_MenuMusicVolume = 0.8f;
+
+		public void PlayMenuMusic ()
 		{
-			if ( m_MusicAudioSource == null || m_MusicClip == null ) return;
-			m_MusicAudioSource.clip = m_MusicClip;
+			if ( m_MusicAudioSource == null || m_MenuMusicClip == null ) return;
+			m_MusicAudioSource.ignoreListenerPause = true;
+			m_MusicAudioSource.clip = m_MenuMusicClip;
 			m_MusicAudioSource.loop = true;
+			m_MusicAudioSource.volume = m_MenuMusicVolume;
 			m_MusicAudioSource.Play ();
+		}
+
+		public void StopMenuMusic ()
+		{
+			if ( m_MusicAudioSource == null ) return;
+			m_MusicAudioSource.Stop ();
+			m_MusicAudioSource.ignoreListenerPause = false;
+		}
+
+		public void PlayGameOverSound ()
+		{
+			PlaySoundOn (m_SoundAudioSource, m_GameOverSound);
 		}
 
 		public void PlaySoundAt (AudioClip clip, Vector3 position, float volume)
