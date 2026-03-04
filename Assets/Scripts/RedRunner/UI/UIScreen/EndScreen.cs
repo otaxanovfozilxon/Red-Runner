@@ -13,6 +13,8 @@ namespace RedRunner.UI
         protected Button HomeButton = null;
         [SerializeField]
         protected Button ExitButton = null;
+        private const float AutoQuitDelay = 10f;
+        private float m_AutoQuitTimer;
 
         private void Start()
         {
@@ -42,9 +44,29 @@ namespace RedRunner.UI
             }
         }
 
+        private void Update()
+        {
+            if (!IsOpen)
+                return;
+
+            m_AutoQuitTimer += Time.unscaledDeltaTime;
+            if (m_AutoQuitTimer >= AutoQuitDelay)
+            {
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+#else
+                Application.Quit();
+#endif
+            }
+        }
+
         public override void UpdateScreenStatus(bool open)
         {
             base.UpdateScreenStatus(open);
+            if (open)
+            {
+                m_AutoQuitTimer = 0f;
+            }
         }
     }
 

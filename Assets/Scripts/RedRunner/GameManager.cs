@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -28,6 +29,45 @@ namespace RedRunner
         public delegate void LifeHandler(int lives);
         public static event LifeHandler OnLifeChanged;
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        private static extern void DiagLog(string msg);
+
+        [DllImport("__Internal")]
+        private static extern string GetDiagLog();
+
+        [DllImport("__Internal")]
+        private static extern void ClearDiagLog();
+
+        [DllImport("__Internal")]
+        private static extern void SaveGameState(string json);
+
+        [DllImport("__Internal")]
+        private static extern int HasSavedGameState();
+
+        [DllImport("__Internal")]
+        private static extern string GetSavedGameState();
+
+        [DllImport("__Internal")]
+        private static extern void ClearSavedGameState();
+#else
+        private static void DiagLog(string msg) { Debug.Log(msg); }
+        private static string GetDiagLog() { return ""; }
+        private static void ClearDiagLog() { }
+        private static void SaveGameState(string json) { }
+        private static int HasSavedGameState() { return 0; }
+        private static string GetSavedGameState() { return ""; }
+        private static void ClearSavedGameState() { }
+#endif
+
+        [Serializable]
+        private class ContinueState
+        {
+            public int coins;
+            public int levelCount;
+            public bool valid;
+        }
+
         private static GameManager m_Singleton;
 
         public static GameManager Singleton
@@ -51,6 +91,7 @@ namespace RedRunner
         private float m_LastScore = 0f;
         private float m_Score = 0f;
         private List<Vector3> m_Checkpoints = new List<Vector3>();
+        private List<GameObject> m_Barriers = new List<GameObject>();
         private int m_LevelCount = 0;
         [SerializeField]
         private GameObject m_LeaderboardPanel;
@@ -58,6 +99,8 @@ namespace RedRunner
         private bool m_GameStarted = false;
         private bool m_GameRunning = false;
         private bool m_AudioEnabled = true;
+        private Vector3 m_DeathBlockPosition;
+        private bool m_HasDeathBlock = false;
 
         /// <summary>
         /// This is my developed callbacks compoents, because callbacks are so dangerous to use we need something that automate the sub/unsub to functions
@@ -120,6 +163,16 @@ namespace RedRunner
             SaveGame.Serializer = new SaveGameBinarySerializer();
 #endif
             m_Singleton = this;
+
+            // Print previous session diagnostics (survives page navigation)
+            string prevDiag = GetDiagLog();
+            if (!string.IsNullOrEmpty(prevDiag))
+            {
+                Debug.Log("=== PREVIOUS SESSION DIAGNOSTICS ===\n" + prevDiag + "\n=== END DIAGNOSTICS ===");
+                ClearDiagLog();
+            }
+            DiagLog("[GM] Game Awake - new session started");
+
             m_Score = 0f;
             m_Lives = 3;
 
@@ -150,15 +203,46 @@ namespace RedRunner
                 m_HighScore = 0f;
             }
 
+            // Check for saved continue state (from previous session where host removed iframe)
+            m_HasContinueState = HasSavedGameState() == 1;
+            if (m_HasContinueState)
+            {
+                string stateJson = GetSavedGameState();
+                DiagLog("[GM] Found saved continue state: " + stateJson);
+                m_SavedContinueState = JsonUtility.FromJson<ContinueState>(stateJson);
+                ClearSavedGameState();
+            }
         }
+
+        private bool m_HasContinueState = false;
+        private ContinueState m_SavedContinueState = null;
 
         void UpdateDeathEvent(bool isDead)
         {
             if (isDead)
             {
+                // Save the block where the player died BEFORE ragdoll moves the body
+                m_HasDeathBlock = false;
+                if (TerrainGeneration.TerrainGenerator.Singleton != null)
+                {
+                    var deathBlock = TerrainGeneration.TerrainGenerator.Singleton.GetCharacterBlock();
+                    if (deathBlock != null)
+                    {
+                        m_DeathBlockPosition = deathBlock.transform.position;
+                        m_HasDeathBlock = true;
+                        Debug.Log($"[GameManager] Death block saved at position: {m_DeathBlockPosition}");
+                    }
+                }
+
                 if (AudioManager.Singleton != null)
                 {
                     AudioManager.Singleton.PlayGameOverSound();
+                }
+
+                // Reset camera timer so it stops and waits the full duration again
+                if (Utilities.CameraController.Singleton != null)
+                {
+                    Utilities.CameraController.Singleton.ResetCamera();
                 }
 
                 m_Lives--;
@@ -252,17 +336,33 @@ namespace RedRunner
                 m_LeaderboardPanel.SetActive(false);
             }
 
-            // Request session continue from Luxodd (keep score, checkpoint — system handles billing)
+            // SAVE game state BEFORE requesting transaction
+            // (host may remove the iframe - state needs to survive in localStorage)
+            var state = new ContinueState
+            {
+                coins = m_Coin.Value,
+                levelCount = m_LevelCount,
+                valid = true
+            };
+            string stateJson = JsonUtility.ToJson(state);
+            SaveGameState(stateJson);
+            DiagLog("[GM] State saved to localStorage: " + stateJson);
+
+            // Request session continue from Luxodd (shows Continue/End popup)
+            DiagLog("[GM] Requesting session continue from Luxodd...");
             LuxoddIntegrationManager.Singleton.RequestSessionContinue(
                 () =>
                 {
-                    // Allowed — respawn at last checkpoint, restore lives, keep score
+                    // Continue approved — resume the game in-place without exiting.
+                    DiagLog("[GM] >>> onAllowed fired - continuing in-place");
+                    ClearSavedGameState();
                     ContinueAfterTransaction();
                 },
                 () =>
                 {
-                    // Denied — end session and return to arcade menu
-                    Debug.LogWarning("[Luxodd] Continue denied - ending session");
+                    // Session denied — clear saved state and exit.
+                    DiagLog("[GM] >>> onDenied fired - ending session");
+                    ClearSavedGameState();
                     LuxoddIntegrationManager.Singleton.EndSessionAndReturnToSystem();
                 }
             );
@@ -270,36 +370,51 @@ namespace RedRunner
 
         void ContinueAfterTransaction()
         {
+            DiagLog("[GM] ContinueAfterTransaction - starting coroutine");
             StartCoroutine(ContinueAfterTransactionCrt());
         }
 
         IEnumerator ContinueAfterTransactionCrt()
         {
-            // Resume time first so physics and camera work
+            DiagLog("[GM] ContinueAfterTransactionCrt STARTED");
+
             m_GameStarted = true;
             ResumeGame();
+            DiagLog("[GM] Game resumed, timeScale=" + Time.timeScale);
 
-            // Restore lives but keep score and checkpoint
             m_Lives = 3;
             if (OnLifeChanged != null)
             {
                 OnLifeChanged(m_Lives);
             }
 
-            // Determine respawn position based on current player position relative to checkpoints
-            Vector3 respawnPos = GetRespawnPosition();
-
-            // Reset path followers (same as normal respawn)
-            TerrainGeneration.TerrainGenerator.Singleton.ResetPathFollowers();
-
-            // Switch to in-game screen first
-            var ingameScreen = UIManager.Singleton.GetUIScreen(UIScreenInfo.IN_GAME_SCREEN);
-            if (ingameScreen != null)
+            Vector3 respawnPos;
+            if (m_HasDeathBlock)
             {
-                UIManager.Singleton.OpenScreen(ingameScreen);
+                float playerZ = m_MainCharacter.transform.position.z;
+                respawnPos = new Vector3(m_DeathBlockPosition.x + 10f, m_DeathBlockPosition.y + 12f, playerZ);
+                DiagLog($"[GM] Block respawn at: {respawnPos}");
+            }
+            else
+            {
+                respawnPos = GetRespawnPosition();
+                DiagLog($"[GM] Checkpoint respawn at: {respawnPos}");
             }
 
-            // Reset camera: stop fast-move, snap to respawn position
+            if (TerrainGeneration.TerrainGenerator.Singleton != null)
+            {
+                TerrainGeneration.TerrainGenerator.Singleton.ResetPathFollowers();
+            }
+
+            if (UIManager.Singleton != null)
+            {
+                var ingameScreen = UIManager.Singleton.GetUIScreen(UIScreenInfo.IN_GAME_SCREEN);
+                if (ingameScreen != null)
+                {
+                    UIManager.Singleton.OpenScreen(ingameScreen);
+                }
+            }
+
             if (Utilities.CameraController.Singleton != null)
             {
                 Utilities.CameraController.Singleton.fastMove = false;
@@ -307,16 +422,20 @@ namespace RedRunner
                 cam.position = new Vector3(respawnPos.x, respawnPos.y, cam.position.z);
             }
 
-            // Wait 1 second before respawn (same delay as normal RespawnCrt)
+            DiagLog("[GM] Waiting 1s before respawn...");
             yield return new WaitForSeconds(1f);
 
-            // Respawn character at checkpoint
+            DiagLog("[GM] Respawning character now");
             RespawnMainCharacter(respawnPos);
+
+            // NOW it's safe to clear the saved state — game is alive and running
+            ClearSavedGameState();
 
             if (LuxoddIntegrationManager.Singleton != null)
             {
                 LuxoddIntegrationManager.Singleton.TrackLevelBegin(m_LevelCount);
             }
+            DiagLog("[GM] ContinueAfterTransactionCrt COMPLETED");
         }
 
         void ShowEndScreen()
@@ -372,7 +491,7 @@ namespace RedRunner
         {
             if (m_GameRunning)
             {
-                
+
             }
         }
 
@@ -387,6 +506,43 @@ namespace RedRunner
                     yield return null;
             }
 
+            // Check if we should auto-continue from a previous session
+            // (host removed the iframe after Continue was pressed, game reloaded)
+            if (m_HasContinueState && m_SavedContinueState != null && m_SavedContinueState.valid)
+            {
+                DiagLog("[GM] AUTO-CONTINUE: Restoring from saved state");
+                m_HasContinueState = false;
+
+                // Restore score and level count from saved state
+                m_Coin.Value = m_SavedContinueState.coins;
+                m_Score = (float)m_SavedContinueState.coins;
+                m_LevelCount = m_SavedContinueState.levelCount;
+                m_Lives = 3;
+
+                if (OnScoreChanged != null)
+                {
+                    OnScoreChanged(m_Score, m_HighScore, m_LastScore);
+                }
+                if (OnLifeChanged != null)
+                {
+                    OnLifeChanged(m_Lives);
+                }
+
+                DiagLog($"[GM] AUTO-CONTINUE: coins={m_Coin.Value} level={m_LevelCount}");
+
+                // Skip start screen — go directly to in-game
+                var ingameScreen = UIManager.Singleton.GetUIScreen(UIScreenInfo.IN_GAME_SCREEN);
+                if (ingameScreen != null)
+                {
+                    UIManager.Singleton.OpenScreen(ingameScreen);
+                }
+
+                // Start the game immediately
+                StartGame();
+                DiagLog("[GM] AUTO-CONTINUE: Game started");
+                yield break;
+            }
+
             if (UIManager.Singleton != null && UIManager.Singleton.UISCREENS != null)
             {
                 UIScreen startScreen = null;
@@ -398,7 +554,7 @@ namespace RedRunner
                         break;
                     }
                 }
-                
+
                 if (startScreen != null)
                 {
                     UIManager.Singleton.OpenScreen(startScreen);
@@ -509,7 +665,14 @@ namespace RedRunner
             m_Score = 0f;
             m_Lives = 3;
             m_Checkpoints.Clear();
+            foreach (var barrier in m_Barriers)
+            {
+                if (barrier != null) Destroy(barrier);
+            }
+            m_Barriers.Clear();
             m_LevelCount = 0; // Reset level count
+            m_HasDeathBlock = false;
+            ClearSavedGameState(); // Clear any stale continue state
             if (m_LeaderboardPanel != null)
             {
                 m_LeaderboardPanel.SetActive(false);
@@ -526,18 +689,20 @@ namespace RedRunner
 
         private Vector3 GetRespawnPosition()
         {
-            float playerX = m_MainCharacter.transform.position.x;
             float playerZ = m_MainCharacter.transform.position.z;
 
-            for (int i = m_Checkpoints.Count - 1; i >= 0; i--)
+            if (m_Checkpoints.Count > 0)
             {
-                if (m_Checkpoints[i].x <= playerX)
-                {
-                    return new Vector3(m_Checkpoints[i].x, m_Checkpoints[i].y + 10f, playerZ);
-                }
+                Vector3 last = m_Checkpoints[m_Checkpoints.Count - 1];
+                return new Vector3(last.x, last.y + 10f, playerZ);
             }
 
             return new Vector3(7.24f, 12.59f, playerZ);
+        }
+
+        public void AddBarrier(GameObject barrier)
+        {
+            m_Barriers.Add(barrier);
         }
 
         public void SetCheckpoint(Vector3 position)

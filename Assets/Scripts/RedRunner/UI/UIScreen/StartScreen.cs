@@ -18,6 +18,8 @@ namespace RedRunner.UI
         protected Button InfoButton = null;
         [SerializeField]
         protected Button ExitButton = null;
+        [SerializeField]
+        protected Text m_CountdownText = null;
 
         private const float AutoStartDelay = 30f;
         private float m_AutoStartTimer;
@@ -101,6 +103,12 @@ namespace RedRunner.UI
 
             // Auto-start the game after 30 seconds of inactivity
             m_AutoStartTimer += Time.unscaledDeltaTime;
+            if (m_CountdownText != null)
+            {
+                int remaining = Mathf.CeilToInt(AutoStartDelay - m_AutoStartTimer);
+                if (remaining < 0) remaining = 0;
+                m_CountdownText.text = "The game starts in " + remaining + "s";
+            }
             if (m_AutoStartTimer >= AutoStartDelay)
             {
                 LaunchGame();
@@ -113,9 +121,21 @@ namespace RedRunner.UI
             if (open)
             {
                 m_AutoStartTimer = 0f;
+                if (m_CountdownText != null)
+                {
+                    m_CountdownText.gameObject.SetActive(true);
+                    m_CountdownText.text = "Game starts in 30s";
+                }
                 if (AudioManager.Singleton != null)
                 {
                     AudioManager.Singleton.PlayMenuMusic();
+                }
+            }
+            else
+            {
+                if (m_CountdownText != null)
+                {
+                    m_CountdownText.gameObject.SetActive(false);
                 }
             }
         }

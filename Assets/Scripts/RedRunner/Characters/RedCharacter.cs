@@ -76,11 +76,26 @@ namespace RedRunner.Characters
 		protected float m_CurrentRunSpeed = 0f;
 		protected float m_CurrentSmoothVelocity = 0f;
 		protected int m_CurrentFootstepSoundIndex = 0;
+		protected bool m_HasJumped = false;
 		protected Vector3 m_InitialScale;
 		protected Vector3 m_InitialPosition;
 
-		private const float IdleDeathDelay = 30f;
+		private const float IdleDeathDelay = 45f;
+		private const float IdleWarningStart = 35f; // Show warning at 35s (10s remaining)
 		private float m_IdleTimer;
+
+		/// <summary>
+		/// Seconds remaining before idle death. Returns -1 if not in warning zone.
+		/// </summary>
+		public float IdleCountdown
+		{
+			get
+			{
+				if (m_IdleTimer >= IdleWarningStart && !IsDead.Value)
+					return IdleDeathDelay - m_IdleTimer;
+				return -1f;
+			}
+		}
 
 		#endregion
 
@@ -368,13 +383,14 @@ namespace RedRunner.Characters
 			// Combine keyboard and arcade joystick input — take whichever has higher magnitude
 			float keyboardH = CrossPlatformInputManager.GetAxis ( "Horizontal" );
 			float arcadeH = ArcadeControls.GetStick ().X;
+			// Snap arcade joystick to full magnitude for responsive digital-style movement
+			if (arcadeH > 0f) arcadeH = 1f;
+			else if (arcadeH < 0f) arcadeH = -1f;
 			float horizontal = Mathf.Abs ( arcadeH ) > Mathf.Abs ( keyboardH ) ? arcadeH : keyboardH;
 
-			bool jumpPressed = CrossPlatformInputManager.GetButtonDown ( "Jump" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Red );
-			bool rollPressed = Input.GetButtonDown ( "Roll" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Black );
-			bool guardPressed = CrossPlatformInputManager.GetButtonDown ( "Guard" );
-			bool firePressed = CrossPlatformInputManager.GetButtonDown ( "Fire" );
-			bool hasInput = Mathf.Abs ( horizontal ) > 0.01f || jumpPressed || rollPressed || guardPressed || firePressed;
+			bool jumpPressed = CrossPlatformInputManager.GetButtonDown ( "Jump" ) || Input.GetKeyDown ( KeyCode.W ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Black );
+			bool rollPressed = Input.GetKeyDown ( KeyCode.S ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Red );
+			bool hasInput = Mathf.Abs ( horizontal ) > 0.01f || jumpPressed || rollPressed;
 
 			// Kill the player if idle for too long
 			if ( hasInput )
@@ -399,25 +415,6 @@ namespace RedRunner.Characters
 			if ( IsDead.Value && !m_ClosingEye )
 			{
 				StartCoroutine ( CloseEye () );
-			}
-			if ( guardPressed )
-			{
-				m_Guard = !m_Guard;
-			}
-			if ( m_Guard )
-			{
-				if ( firePressed )
-				{
-					m_Animator.SetTrigger ( m_Actions [ m_CurrentActionIndex ] );
-					if ( m_CurrentActionIndex < m_Actions.Length - 1 )
-					{
-						m_CurrentActionIndex++;
-					}
-					else
-					{
-						m_CurrentActionIndex = 0;
-					}
-				}
 			}
 
 			if ( rollPressed )
@@ -444,7 +441,7 @@ namespace RedRunner.Characters
 			m_Animator.SetBool ( "IsDead", IsDead.Value );
 			m_Animator.SetBool ( "Block", m_Block );
 			m_Animator.SetBool ( "Guard", m_Guard );
-			if ( Input.GetButtonDown ( "Roll" ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Black ) )
+			if ( Input.GetKeyDown ( KeyCode.S ) || ArcadeControls.GetButtonDown ( ArcadeButtonColor.Red ) )
 			{
 				m_Animator.SetTrigger ( "Roll" );
 			}
@@ -506,7 +503,7 @@ namespace RedRunner.Characters
 
 		public virtual void PlayFootstepSound ()
 		{
-			if ( m_GroundCheck.IsGrounded )
+			if ( m_GroundCheck.IsGrounded && m_Speed.x > 0.1f )
 			{
 				AudioManager.Singleton.PlayFootstepSound ( m_FootstepAudioSource, ref m_CurrentFootstepSoundIndex );
 			}
@@ -545,6 +542,7 @@ namespace RedRunner.Characters
 			{
 				if ( m_GroundCheck.IsGrounded )
 				{
+					m_HasJumped = true;
 					Vector2 velocity = m_Rigidbody2D.linearVelocity;
 					velocity.y = m_JumpStrength;
 					m_Rigidbody2D.linearVelocity = velocity;
@@ -629,8 +627,9 @@ namespace RedRunner.Characters
 
 		void GroundCheck_OnGrounded ()
 		{
-			if ( !IsDead.Value )
+			if ( !IsDead.Value && m_HasJumped )
 			{
+				m_HasJumped = false;
 				m_JumpParticleSystem.Play ();
 				AudioManager.Singleton.PlayGroundedSound ( m_JumpAndGroundedAudioSource );
 			}

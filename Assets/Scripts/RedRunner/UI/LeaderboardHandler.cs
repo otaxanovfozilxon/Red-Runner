@@ -30,60 +30,66 @@ namespace RedRunner.UI
             if (_webSocketCommandHandler == null)
             {
                 Debug.LogWarning("[Luxodd] WebSocketCommandHandler is missing on LeaderboardHandler!");
+                PopulateOffline();
                 return;
             }
 
             _webSocketCommandHandler.SendLeaderboardRequestCommand(
                 (response) => Populate(response),
-                (code, msg) => Debug.LogError($"[Luxodd] Leaderboard Error {code}: {msg}")
+                (code, msg) =>
+                {
+                    Debug.LogError($"[Luxodd] Leaderboard Error {code}: {msg}");
+                    PopulateOffline();
+                }
             );
         }
 
         private void Populate(LeaderboardDataResponse response)
         {
-            // NULL CHECK: Prevent crash if lists not assigned in Inspector
             if (_playerNameTexts == null || _playerScoreTexts == null)
             {
                 Debug.LogWarning("[Leaderboard] Player text lists are null! Cannot populate leaderboard.");
                 return;
             }
-            
-            // Reset all texts first
-            for (int i = 0; i < _leaderboardSize; i++)
+
+            ClearSlots();
+
+            // Slot 0: current player with session coin count
+            int currentCoins = 0;
+            if (GameManager.Singleton != null)
             {
-                if (i < _playerNameTexts.Count) _playerNameTexts[i].text = "";
-                if (i < _playerScoreTexts.Count) _playerScoreTexts[i].text = "";
+                currentCoins = GameManager.Singleton.m_Coin.Value;
             }
-
-            int index = 0;
-
-            // 1. Show CURRENT PLAYER at slot 0 (live session name + score)
+            string currentName = "You";
+            if (LuxoddIntegrationManager.Singleton != null)
+            {
+                currentName = FormatName(LuxoddIntegrationManager.Singleton.PlayerName);
+            }
             if (_playerNameTexts.Count > 0)
             {
-                string pName = "Guest";
-                int pScore = 0;
-
-                if (LuxoddIntegrationManager.Singleton != null)
-                {
-                    pName = LuxoddIntegrationManager.Singleton.PlayerName;
-                }
-
-                if (GameManager.Singleton != null)
-                {
-                    pScore = (int)GameManager.Singleton.Score;
-                }
-
-                _playerNameTexts[0].text = FormatName(pName);
-                _playerScoreTexts[0].text = pScore.ToString();
-                index = 1;
+                _playerNameTexts[0].text = currentName;
+                _playerScoreTexts[0].text = currentCoins.ToString();
             }
 
-            // 2. Fill remaining 4 slots from the server leaderboard
+            // Slots 1+: other players from server leaderboard (skip current user)
+            int index = 1;
             if (response.Leaderboard != null)
             {
-                for (int i = 0; i < response.Leaderboard.Count && index < _playerNameTexts.Count && index < _leaderboardSize; i++)
+                // Get current user's rank to skip their duplicate entry
+                int currentUserRank = -1;
+                if (response.CurrentUserData != null)
+                {
+                    currentUserRank = response.CurrentUserData.Rank;
+                }
+
+                for (int i = 0; i < response.Leaderboard.Count && index < _leaderboardSize && index < _playerNameTexts.Count; i++)
                 {
                     var data = response.Leaderboard[i];
+
+                    // Skip current user's entry from the server list
+                    if (currentUserRank >= 0 && data.Rank == currentUserRank)
+                        continue;
+
                     _playerNameTexts[index].text = FormatName(data.PlayerName);
                     _playerScoreTexts[index].text = data.TotalScore.ToString();
                     index++;
@@ -91,10 +97,42 @@ namespace RedRunner.UI
             }
         }
 
+        private void PopulateOffline()
+        {
+            if (_playerNameTexts == null || _playerScoreTexts == null) return;
+
+            ClearSlots();
+
+            int currentCoins = 0;
+            if (GameManager.Singleton != null)
+            {
+                currentCoins = GameManager.Singleton.m_Coin.Value;
+            }
+            string currentName = "You";
+            if (LuxoddIntegrationManager.Singleton != null)
+            {
+                currentName = FormatName(LuxoddIntegrationManager.Singleton.PlayerName);
+            }
+            if (_playerNameTexts.Count > 0)
+            {
+                _playerNameTexts[0].text = currentName;
+                _playerScoreTexts[0].text = currentCoins.ToString();
+            }
+        }
+
+        private void ClearSlots()
+        {
+            for (int i = 0; i < _leaderboardSize; i++)
+            {
+                if (i < _playerNameTexts.Count) _playerNameTexts[i].text = "";
+                if (i < _playerScoreTexts.Count) _playerScoreTexts[i].text = "";
+            }
+        }
+
         private string FormatName(string name)
         {
             if (string.IsNullOrEmpty(name)) return "Guest";
-            if (name.StartsWith("lux-")) return "Guest";
+            if (name.StartsWith("lux-", StringComparison.OrdinalIgnoreCase)) return "Guest";
             return name;
         }
     }

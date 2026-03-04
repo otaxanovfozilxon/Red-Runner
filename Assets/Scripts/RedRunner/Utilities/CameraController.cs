@@ -67,6 +67,22 @@ namespace RedRunner.Utilities
 			}
 		}
 
+		/// <summary>
+		/// Seconds remaining before independent camera movement starts.
+		/// Returns -1 if camera is already moving or not in the 15s warning zone.
+		/// </summary>
+		public float CameraMoveCountdown
+		{
+			get
+			{
+				if (m_IsIndependentMoving) return -1f;
+				float remaining = m_StartIndependentMoveDelay - m_TimeElapsed;
+				if (remaining <= 15f && remaining > 0f)
+					return remaining;
+				return -1f;
+			}
+		}
+
 		void Awake ()
 		{
 			m_Singleton = this;
@@ -92,7 +108,7 @@ namespace RedRunner.Utilities
 			GameManager.OnReset -= ResetCamera;
 		}
 
-		void ResetCamera()
+		public void ResetCamera()
 		{
 			m_TimeElapsed = 0f;
 			m_IsIndependentMoving = false;

@@ -1,0 +1,1144 @@
+fileFormatVersion: 2
+guid: e7300b93b8d867b44a249ca4db00c416
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3347060536650959591
+    second: grees_0
+  - first:
+      213: -164337764821029163
+    second: grees_1
+  - first:
+      213: -2699367856712845434
+    second: grees_2
+  - first:
+      213: -293209264465178319
+    second: grees_3
+  - first:
+      213: -4366400938962613771
+    second: grees_4
+  - first:
+      213: 837595029232270668
+    second: grees_5
+  - first:
+      213: -1270981454574688816
+    second: grees_6
+  - first:
+      213: 8834058181862823586
+    second: grees_7
+  - first:
+      213: -8133742746944839374
+    second: grees_8
+  - first:
+      213: -3876441701546554716
+    second: grees_9
+  - first:
+      213: 723241032894718829
+    second: grees_10
+  - first:
+      213: -3093469352023396801
+    second: grees_11
+  - first:
+      213: 2836505133183278209
+    second: grees_12
+  - first:
+      213: -4247488721442021639
+    second: grees_13
+  - first:
+      213: -3622561478107285890
+    second: grees_14
+  - first:
+      213: 133318777474907713
+    second: grees_15
+  - first:
+      213: 6212864276255710810
+    second: grees_16
+  - first:
+      213: -1073162555165012146
+    second: grees_17
+  - first:
+      213: 4809129826491868086
+    second: grees_18
+  - first:
+      213: -519207686339391071
+    second: grees_19
+  - first:
+      213: -5674741531987582219
+    second: grees_20
+  - first:
+      213: 3363801042970371855
+    second: grees_21
+  - first:
+      213: -3541970446487901193
+    second: grees_22
+  - first:
+      213: -713998807605038203
+    second: grees_23
+  - first:
+      213: 1156556219689023484
+    second: grees_24
+  - first:
+      213: -8575896921845960456
+    second: grees_25
+  - first:
+      213: -2962542937217210631
+    second: grees_26
+  - first:
+      213: -1860006345969725340
+    second: grees_27
+  - first:
+      213: 7816785216021322928
+    second: grees_28
+  - first:
+      213: 2437510112249187497
+    second: grees_29
+  - first:
+      213: 8447422260191083457
+    second: grees_30
+  - first:
+      213: 4377874509747916504
+    second: grees_31
+  - first:
+      213: -4028579446496586199
+    second: grees_32
+  - first:
+      213: 5110633379054233060
+    second: grees_33
+  - first:
+      213: 7614716957446286444
+    second: grees_34
+  - first:
+      213: -7291727502699794932
+    second: grees_35
+  - first:
+      213: 4085595687767585359
+    second: grees_36
+  - first:
+      213: 3132130215729911947
+    second: grees_37
+  - first:
+      213: 1871159476609195520
+    second: grees_38
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: grees_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 342
+        width: 95
+        height: 112
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ea0fc813d5237e20800000000000000
+      internalID: 3347060536650959591
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_1
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 422
+        width: 17
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5de29a07ca728bdf0800000000000000
+      internalID: -164337764821029163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_2
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 389
+        width: 97
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 687f5867c3be98ad0800000000000000
+      internalID: -2699367856712845434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_3
+      rect:
+        serializedVersion: 2
+        x: 275
+        y: 374
+        width: 143
+        height: 80
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13113ba3abf4eebf0800000000000000
+      internalID: -293209264465178319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_4
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 388
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f9833eea7d6763c0800000000000000
+      internalID: -4366400938962613771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_5
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 382
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4db507cd3cbf9b00800000000000000
+      internalID: 837595029232270668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_6
+      rect:
+        serializedVersion: 2
+        x: 421
+        y: 397
+        width: 19
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d567fbd9119c5ee0800000000000000
+      internalID: -1270981454574688816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_7
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 365
+        width: 42
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a6111f8c11e89a70800000000000000
+      internalID: 8834058181862823586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_8
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 257
+        width: 121
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23161f9e0142f1f80800000000000000
+      internalID: -8133742746944839374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_9
+      rect:
+        serializedVersion: 2
+        x: 403
+        y: 369
+        width: 17
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4aa8eca8fcc143ac0800000000000000
+      internalID: -3876441701546554716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_10
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 216
+        width: 122
+        height: 121
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d632da433e7790a00800000000000000
+      internalID: 723241032894718829
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_11
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 333
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3e6615a30ac115d0800000000000000
+      internalID: -3093469352023396801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_12
+      rect:
+        serializedVersion: 2
+        x: 309
+        y: 309
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18c16f2e36a4d5720800000000000000
+      internalID: 2836505133183278209
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_13
+      rect:
+        serializedVersion: 2
+        x: 348
+        y: 256
+        width: 92
+        height: 112
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9fe58f21383ed05c0800000000000000
+      internalID: -4247488721442021639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_14
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 317
+        width: 16
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e76b66067831abdc0800000000000000
+      internalID: -3622561478107285890
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_15
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 309
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14ef745c8b4a9d100800000000000000
+      internalID: 133318777474907713
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_16
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 260
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5e9fef5427883650800000000000000
+      internalID: 6212864276255710810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_17
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 230
+        width: 38
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4f8329875c5b11f0800000000000000
+      internalID: -1073162555165012146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_18
+      rect:
+        serializedVersion: 2
+        x: 185
+        y: 107
+        width: 133
+        height: 142
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b3a8cae8167db240800000000000000
+      internalID: 4809129826491868086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_19
+      rect:
+        serializedVersion: 2
+        x: 311
+        y: 217
+        width: 24
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a196133c576bc8f0800000000000000
+      internalID: -519207686339391071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_20
+      rect:
+        serializedVersion: 2
+        x: 340
+        y: 206
+        width: 36
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f269b984a44f31b0800000000000000
+      internalID: -5674741531987582219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_21
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 221
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f076655f93f9eae20800000000000000
+      internalID: 3363801042970371855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_22
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 192
+        width: 20
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fb282425a468dec0800000000000000
+      internalID: -3541970446487901193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_23
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 197
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58336ae0edd5716f0800000000000000
+      internalID: -713998807605038203
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_24
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 177
+        width: 31
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf7355d01c9ec0010800000000000000
+      internalID: 1156556219689023484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_25
+      rect:
+        serializedVersion: 2
+        x: 348
+        y: 70
+        width: 92
+        height: 138
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f07107cf2b4cf880800000000000000
+      internalID: -8575896921845960456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_26
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 53
+        width: 119
+        height: 138
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f6635315eee2e6d0800000000000000
+      internalID: -2962542937217210631
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_27
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 141
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4609084451eef26e0800000000000000
+      internalID: -1860006345969725340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_28
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 109
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0bcd9762dbcca7c60800000000000000
+      internalID: 7816785216021322928
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_29
+      rect:
+        serializedVersion: 2
+        x: 297
+        y: 97
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ac09095886c3d120800000000000000
+      internalID: 2437510112249187497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_30
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 5
+        width: 122
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cbba6e0ac54b3570800000000000000
+      internalID: 8447422260191083457
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_31
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 78
+        width: 37
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8de03c0fba551cc30800000000000000
+      internalID: 4377874509747916504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_32
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 67
+        width: 35
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9269126765c9718c0800000000000000
+      internalID: -4028579446496586199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_33
+      rect:
+        serializedVersion: 2
+        x: 277
+        y: 50
+        width: 17
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e528cf1bfd9ce640800000000000000
+      internalID: 5110633379054233060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_34
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 3
+        width: 115
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6caab17ab8eca960800000000000000
+      internalID: 7614716957446286444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_35
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 5
+        width: 47
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0ee1a238749eca90800000000000000
+      internalID: -7291727502699794932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_36
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 15
+        width: 30
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f423141b1a3f2b830800000000000000
+      internalID: 4085595687767585359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_37
+      rect:
+        serializedVersion: 2
+        x: 251
+        y: 5
+        width: 28
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8859d226df877b20800000000000000
+      internalID: 3132130215729911947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grees_38
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 15
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00e956151a1b7f910800000000000000
+      internalID: 1871159476609195520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      grees_0: 3347060536650959591
+      grees_1: -164337764821029163
+      grees_10: 723241032894718829
+      grees_11: -3093469352023396801
+      grees_12: 2836505133183278209
+      grees_13: -4247488721442021639
+      grees_14: -3622561478107285890
+      grees_15: 133318777474907713
+      grees_16: 6212864276255710810
+      grees_17: -1073162555165012146
+      grees_18: 4809129826491868086
+      grees_19: -519207686339391071
+      grees_2: -2699367856712845434
+      grees_20: -5674741531987582219
+      grees_21: 3363801042970371855
+      grees_22: -3541970446487901193
+      grees_23: -713998807605038203
+      grees_24: 1156556219689023484
+      grees_25: -8575896921845960456
+      grees_26: -2962542937217210631
+      grees_27: -1860006345969725340
+      grees_28: 7816785216021322928
+      grees_29: 2437510112249187497
+      grees_3: -293209264465178319
+      grees_30: 8447422260191083457
+      grees_31: 4377874509747916504
+      grees_32: -4028579446496586199
+      grees_33: 5110633379054233060
+      grees_34: 7614716957446286444
+      grees_35: -7291727502699794932
+      grees_36: 4085595687767585359
+      grees_37: 3132130215729911947
+      grees_38: 1871159476609195520
+      grees_4: -4366400938962613771
+      grees_5: 837595029232270668
+      grees_6: -1270981454574688816
+      grees_7: 8834058181862823586
+      grees_8: -8133742746944839374
+      grees_9: -3876441701546554716
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
