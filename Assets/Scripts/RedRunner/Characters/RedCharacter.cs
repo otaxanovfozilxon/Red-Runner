@@ -79,6 +79,9 @@ namespace RedRunner.Characters
 		protected bool m_HasJumped = false;
 		protected Vector3 m_InitialScale;
 		protected Vector3 m_InitialPosition;
+		protected bool m_BlockedLeft = false;
+		protected bool m_BlockedRight = false;
+		protected bool m_MovementBlocked = false;
 
 		private const float IdleDeathDelay = 45f;
 		private const float IdleWarningStart = 35f; // Show warning at 35s (10s remaining)
@@ -434,8 +437,10 @@ namespace RedRunner.Characters
 
 		void LateUpdate ()
 		{
-			m_Animator.SetFloat ( "Speed", m_Speed.x );
-			m_Animator.SetFloat ( "VelocityX", Mathf.Abs ( m_Rigidbody2D.linearVelocity.x ) );
+			float animSpeed = m_MovementBlocked ? 0f : m_Speed.x;
+			float animVelX = m_MovementBlocked ? 0f : Mathf.Abs ( m_Rigidbody2D.linearVelocity.x );
+			m_Animator.SetFloat ( "Speed", animSpeed );
+			m_Animator.SetFloat ( "VelocityX", animVelX );
 			m_Animator.SetFloat ( "VelocityY", m_Rigidbody2D.linearVelocity.y );
 			m_Animator.SetBool ( "IsGrounded", m_GroundCheck.IsGrounded );
 			m_Animator.SetBool ( "IsDead", IsDead.Value );
@@ -501,6 +506,25 @@ namespace RedRunner.Characters
 
 		#region Public Methods
 
+		void FixedUpdate ()
+		{
+			// Reset blocked flags each physics step, OnCollisionStay2D will set them again
+			m_BlockedLeft = false;
+			m_BlockedRight = false;
+		}
+
+		void OnCollisionStay2D ( Collision2D collision )
+		{
+			foreach ( ContactPoint2D contact in collision.contacts )
+			{
+				// A horizontal wall contact has a normal pointing left or right
+				if ( contact.normal.x > 0.5f )
+					m_BlockedLeft = true;
+				else if ( contact.normal.x < -0.5f )
+					m_BlockedRight = true;
+			}
+		}
+
 		public virtual void PlayFootstepSound ()
 		{
 			if ( m_GroundCheck.IsGrounded && m_Speed.x > 0.1f )
@@ -514,10 +538,12 @@ namespace RedRunner.Characters
 			if ( !IsDead.Value )
 			{
 				float speed = m_CurrentRunSpeed;
-//				if ( CrossPlatformInputManager.GetButton ( "Walk" ) )
-//				{
-//					speed = m_WalkSpeed;
-				//				}
+				// Block movement into a wall the player is touching
+				m_MovementBlocked = ( m_BlockedRight && horizontalAxis > 0f ) || ( m_BlockedLeft && horizontalAxis < 0f );
+				if ( m_MovementBlocked )
+				{
+					horizontalAxis = 0f;
+				}
 				Vector2 velocity = m_Rigidbody2D.linearVelocity;
 				velocity.x = speed * horizontalAxis;
 				m_Rigidbody2D.linearVelocity = velocity;
@@ -598,6 +624,9 @@ namespace RedRunner.Characters
 		{
             IsDead.Value = false;
 			IsInputBlocked = false;
+			m_BlockedLeft = false;
+			m_BlockedRight = false;
+			m_MovementBlocked = false;
 			m_ClosingEye = false;
 			m_Guard = false;
 			m_Block = false;

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,6 +25,8 @@ namespace RedRunner.Enemies
 		[SerializeField]
 		private AudioSource m_AudioSource;
 
+		private Collider2D m_TriggerCollider;
+
 		public override Collider2D Collider2D {
 			get {
 				return m_Collider2D;
@@ -35,6 +37,37 @@ namespace RedRunner.Enemies
 		{
 			if (targetRotation == null) {
 				targetRotation = transform;
+			}
+
+			// Replace any PolygonCollider2D with a CircleCollider2D at runtime
+			var polyCollider = GetComponent<PolygonCollider2D>();
+			if (polyCollider != null)
+			{
+				// Calculate radius from the polygon bounds
+				float radius = Mathf.Max(polyCollider.bounds.extents.x, polyCollider.bounds.extents.y);
+				Vector2 offset = polyCollider.offset;
+				Destroy(polyCollider);
+
+				var circle = gameObject.AddComponent<CircleCollider2D>();
+				circle.radius = radius;
+				circle.offset = offset;
+				m_Collider2D = circle;
+			}
+
+			// If m_Collider2D is missing, grab whatever collider exists
+			if (m_Collider2D == null)
+			{
+				m_Collider2D = GetComponent<Collider2D>();
+			}
+
+			// Create a trigger collider for instant kill detection
+			if (m_Collider2D is CircleCollider2D circleCol)
+			{
+				var trigger = gameObject.AddComponent<CircleCollider2D>();
+				trigger.radius = circleCol.radius * 0.9f;
+				trigger.offset = circleCol.offset;
+				trigger.isTrigger = true;
+				m_TriggerCollider = trigger;
 			}
 		}
 
@@ -47,6 +80,14 @@ namespace RedRunner.Enemies
 				rotation.z -= m_Speed;
 			}
 			targetRotation.rotation = Quaternion.Euler (rotation);
+		}
+
+		void OnTriggerEnter2D (Collider2D collider)
+		{
+			Character character = collider.GetComponent<Character> ();
+			if (character != null) {
+				Kill (character);
+			}
 		}
 
 		void OnCollisionEnter2D (Collision2D collision2D)
