@@ -24,6 +24,7 @@ namespace RedRunner.Enemies
 		private AudioClip m_SawingSound;
 		[SerializeField]
 		private AudioSource m_AudioSource;
+		private float m_BaseColliderRadius = 1.1f;
 
 		private Collider2D m_TriggerCollider;
 
@@ -39,17 +40,20 @@ namespace RedRunner.Enemies
 				targetRotation = transform;
 			}
 
-			// Replace any PolygonCollider2D with a CircleCollider2D at runtime
+			// Big saws get a larger collider
+			float colliderRadius = gameObject.name.StartsWith("Saw 512 With Circle")
+				? 2.5f
+				: m_BaseColliderRadius;
+
+			// Remove PolygonCollider2D if present and replace with CircleCollider2D
 			var polyCollider = GetComponent<PolygonCollider2D>();
 			if (polyCollider != null)
 			{
-				// Calculate radius from the polygon bounds
-				float radius = Mathf.Max(polyCollider.bounds.extents.x, polyCollider.bounds.extents.y);
 				Vector2 offset = polyCollider.offset;
 				Destroy(polyCollider);
 
 				var circle = gameObject.AddComponent<CircleCollider2D>();
-				circle.radius = radius;
+				circle.radius = colliderRadius;
 				circle.offset = offset;
 				m_Collider2D = circle;
 			}
@@ -60,11 +64,17 @@ namespace RedRunner.Enemies
 				m_Collider2D = GetComponent<Collider2D>();
 			}
 
+			// Ensure the collider uses the configured radius
+			if (m_Collider2D is CircleCollider2D mainCircle)
+			{
+				mainCircle.radius = colliderRadius;
+			}
+
 			// Create a trigger collider for instant kill detection
 			if (m_Collider2D is CircleCollider2D circleCol)
 			{
 				var trigger = gameObject.AddComponent<CircleCollider2D>();
-				trigger.radius = circleCol.radius * 0.9f;
+				trigger.radius = colliderRadius * 0.9f;
 				trigger.offset = circleCol.offset;
 				trigger.isTrigger = true;
 				m_TriggerCollider = trigger;
